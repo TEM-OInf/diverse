@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Prompt-Generator</title>
+	<style>
+		body {
+			background-color: #f9f9f9;
+			font-family: Arial, sans-serif;
+		}
+		
+		.container {
+			margin: 0 auto;
+			padding: 20px;
+			max-width: 800px;
+			background-color: #fff;
+			box-shadow: 0px 0px 10px #ccc;
+		}
+		
+		h1, h2 {
+			text-align: center;
+			color: #333;
+		}
+		h1 {
+			font-size: 36px;
+			margin-top: 0;
+			margin-bottom: 30px;
+		}
+		h2 {
+			font-size: 24px;
+		}
+		
+		p {
+			text-align: justify;
+		}
+		
+		/* Gemeinsame Stile für Textbereiche, Eingabefelder und Auswahlmenüs */
+		textarea, input, select {
+			padding: 10px;
+			font-size: 20px;
+			border-radius: 5px;
+			border: none;
+			background-color: #ddd;
+			color: #333;
+			margin-bottom: 20px;
+			width: 100%;
+			box-sizing: border-box;
+		}
+		
+		/* Stil für Schaltflächen */
+		button {
+			background-color: #4CAF50;
+			color: white;
+			border: none;
+			border-radius: 5px;
+			padding: 10px 20px;
+			font-size: 20px;
+			cursor: pointer;
+			margin-bottom: 20px;
+		}
+		
+		/* Stil für Schaltflächen beim Überfahren mit der Maus */
+		button:hover {
+			background-color: #3e8e41;
+		}
+		
+		/* Begriff 2 und dessen Label sind per default ausgeblendet */
+		#term2, #labelTerm2 {
+			display: none;
+		}
+
+		/* CSS-Animation für den Augen-auf-bei-LLM-Hinweis */
+    	@keyframes blink {
+			0% { opacity: 1; }
+			50% { opacity: 0; }
+			100% { opacity: 1; }
+		}
+	</style>
+</head>
+<body>
+	<div class="container"> <!-- Hauptcontainer für den Inhalt -->
+		<h1>Prompt-Generator</h1>
+		<h2>Liebe*r Schüler*in</h2>
+		<p>Dieser Prompt-Generator hilft Ihnen Prompts zu entwickeln, mit denen Sie LLMs (Large Language Models) wie ChatGPT so können, die Sie im Lernprozess unterstützt - ohne dass Sie um das Vergnügen des kritischen Denkens betrogen werden 🤓</p> <!-- Einleitender Text -->
+		
+		<!-- Auswahl des Faches -->
+		<label for="subjectSelect">Wählen Sie ein Fach:</label>
+		<select id="subjectSelect">
+			<option value="BG">BG</option>
+			<option value="Biologie">Biologie</option>
+			<option value="Chemie">Chemie</option>
+			<option value="Deutsch">Deutsch</option>
+			<option value="Englisch">Englisch</option>
+			<option value="Französisch">Französisch</option>
+			<option value="Geografie">Geografie</option>
+			<option value="Geschichte">Geschichte</option>
+			<option value="Informatik">Informatik</option>
+			<option value="Mathematik">Mathematik</option>
+			<option value="Physik">Physik</option>
+			<option value="PPP">PPP</option>
+		</select>
+        
+		<!-- Auswahl der Option (Einzelbegriff oder Zusammenhang zwischen zwei Begriffen) -->
+		<label for="optionSelect">Wählen Sie aus, was Sie vorhaben:</label>
+		<select id="optionSelect" onchange="toggleTerm2()">
+			<option value="single">Ich möchte den folgenden Begriff definieren lassen.</option>
+			<option value="double">Ich möchte Erklärungen zum Zusammenhang zwischen zwei folgenden Begriffen.</option>
+            <option value="questions">Ich möchte Fragen zum folgenden Begriff.</option>
+            <option value="funny_story">Ich möchte eine lustige Geschichte zum folgenden Begriff (Achtung: LLMs sind mäßig witzig...).</option>
+            <option value="motivation">Ich möchte motiviert werden.</option>
+            <option value="meaning">Ich möchte Beispiele wozu dieser Begriff und damit zusammenhängende Konzepte im Leben nützlich sein können.</option>
+		</select>
+		
+		<!-- Eingabefelder für Begriffe -->
+		<label for="term1">Begriff 1:</label>
+		<input type="text" id="term1" />
+		<label for="term2" id="labelTerm2">Begriff 2:</label>
+		<input type="text" id="term2" />
+		
+		<!-- Schaltfläche zum Generieren des Prompts -->
+		<button onclick="generatePrompt()">Klicken Sie hier um einen prompt zu generieren.</button>
+		
+		<!-- Hinweis für die LLM-Antworten -->
+		<p style="animation: blink 2s linear infinite; font-weight: bold; color: red;">
+			Hinweis: Die Antworten von LLMs sind nicht immer fachlich korrekt! Bitte prüfen Sie immer kritisch und ziehen Sie weitere Quellen zurate.
+		</p>
+				
+		<!-- Textbereich, in dem der generierte Prompt angezeigt wird -->
+		<textarea id="prompt" rows="10" style="background-color: grey;" readonly></textarea>
+        
+        <!-- Schaltfläche zum Kopieren des generierten Prompts -->
+        <button onclick="copyPrompt()">Klicken Sie hier um den prompt zu kopieren.</button>
+	</div>
+	
+	<!-- JavaScript-Code -->
+	<script>
+		/* Funktion zum Umschalten der Anzeige des zweiten Begriffsfelds */
+		function toggleTerm2() {
+			const option = document.getElementById("optionSelect").value;
+			const term2 = document.getElementById("term2");
+			const labelTerm2 = document.getElementById("labelTerm2");
+			
+			/* Zeige oder verberge das zweite Begriffsfeld basierend auf der ausgewählten Option */
+			if (option === "double") {
+				term2.style.display = "block";
+				labelTerm2.style.display = "block";
+			} else {
+				term2.style.display = "none";
+				labelTerm2.style.display = "none";
+			}
+		}
+		
+		/* Funktion zum Generieren des Prompts basierend auf den Eingaben des Benutzers */
+		function generatePrompt() {
+			/* Abrufen der Werte aus den Eingabefeldern */
+			const term1 = document.getElementById("term1").value;
+			const term2 = document.getElementById("term2").value;
+			const option = document.getElementById("optionSelect").value;
+			const subject = document.getElementById("subjectSelect").value;
+            const role = `Nimm die Rolle einer gymnasialen Lehrperson für ${document.getElementById("subjectSelect").value} ein.`;
+			const writingStyle = "Schreibe deutsch. Schreibe in einer sachlichen, leicht verständlichen Sprache. Nutze Fachbegriffe und erkläre diese, wo sinnvoll. Nimm, wo möglich, Bezug zur Lebenswelt der Schüler. Strukturiere und formatiere deinen Text. Verzichte auf eine Einleitung in der Art von 'Ich als Lehrperson' und auf einen Kommentar am Schluss.";
+			const textLength = "Schreibe maximal 5 kurze Sätze. Vermeide komplexe Satzstrukturen.";
+			const targetGroup = "Schreibe für 16-jährige gymnasiale Schüler. Schreibe in der Sie-Form";
+			
+			let promptContent = "";
+			
+			/* Generiere den Prompt basierend auf der ausgewählten Option */
+            switch (document.getElementById("optionSelect").value) {
+                case "single":
+                    promptContent = `{"role": "prompt", "content": "${role} Definiere den weiter unten folgenden Begriff. ${targetGroup} ${writingStyle} ${textLength}"}, {"role": "begriff", "content": "${term1}"}`;
+                    break;
+                case "double":
+                    promptContent = `{"role": "prompt", "content": "${role} Erkläre die Zusammenhänge zwischen den weiter unten folgenden Begriffen. ${targetGroup} ${writingStyle} ${textLength}"}, {"role": "begriff1", "content": "${term1}"}, {"role": "begriff2", "content": "${term2}"}`;
+                    break;
+                case "questions":
+                    promptContent = `{"role": "prompt", "content": "${role} Stelle einige anspruchsvolle offene Fragen zu dem folgenden Begriff. Achte darauf, dass die Fragen kein Kontextwissen voraussetzen, die den Schülern wahrscheinlich nicht bekannt sind. Bleibe inhaltlich eng beim Begriff. ${targetGroup} ${writingStyle}${textLength}"}, {"role": "begriff", "content": "${term1}"}`;
+                    break;
+                case "funny_story":
+                    promptContent = `{"role": "prompt", "content": "${role} Bitte erzähle eine lustige Geschichte, die den folgenden Begriff beinhaltet. Schreibe lustig aber so, dass zumindest ansatzweise ein Lerneffekt vorhanden ist.${targetGroup}${textLength}"}, {"role": "begriff", "content": "${term1}"}`;
+                    break;
+                case "motivation":
+                    promptContent = `{"role": "prompt", "content": "Nimm die Rolle einer wohlwollenden und empathischen Lehrperson ein. Formuliere einige motivierende Sätze die in Bezug mit Schulalltag und Schulerfolg stehen. ${targetGroup}"}`;
+                    break;
+                case "meaning":
+                    promptContent = `{"role": "prompt", "content": "${role} Überlege mit welchen Konzepten des Fachs ${role} der folgende Begriff zu tun hat. Suche 3 konkrete, alltagsnahe und plausible Beispiele, die den Nutzen dieses Begriffs und der damit zusammenhängenden Konzepte veranschaulichen. Nimm wo sinnvoll Bezug auf Umweltthemen. Schreibe pro Beispiel maximal 2 kurze Sätze. Schreibe charmant, überzeugend und begeisternd. ${targetGroup}"}, {"role": "begriff", "content": "${term1}"}`;
+                    break;
+            }
+			
+			/* Setze den generierten Prompt im Textbereich */
+			const promptArea = document.getElementById("prompt");
+			promptArea.value = promptContent;
+			promptArea.style.backgroundColor = "white";
+		}
+		
+		/* Funktion zum Kopieren des generierten Prompts in die Zwischenablage */
+		function copyPrompt() {
+			const promptArea = document.getElementById("prompt");
+			const textToCopy = promptArea.value;
+
+			/* Verwende die Clipboard API zum Kopieren des Texts */
+			navigator.clipboard.writeText(textToCopy).then(function() {
+				alert("Der prompt wurde kopiert! Testen Sie Ihn nun in einer LLM.");
+			}).catch(function(err) {
+				alert("Fehler beim Kopieren!");
+			});
+		}
+	</script>
+</body>
+</html>
