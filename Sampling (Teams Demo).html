@@ -1,0 +1,177 @@
+<title>Ausprobieren statt zuschauen</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#FAF9F5; --panel:#FFFFFF; --ink:#1C1D21; --muted:#6B6A63; --line:#DDDACF;
+  --analog:#0E7C66; --digital:#C2451E; --soft:#C2451E14; --grid:#E7E4DA; --focus:#0E7C66;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171B; --panel:#1E2126; --ink:#ECEAE2; --muted:#9A988F; --line:#33363D;
+    --analog:#2FBF9C; --digital:#E8763F; --soft:#E8763F1F; --grid:#282B31; --focus:#2FBF9C;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171B; --panel:#1E2126; --ink:#ECEAE2; --muted:#9A988F; --line:#33363D;
+  --analog:#2FBF9C; --digital:#E8763F; --soft:#E8763F1F; --grid:#282B31; --focus:#2FBF9C;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:"Instrument Sans",system-ui,sans-serif; margin:0; padding:16px 14px 32px; font-size:15px; line-height:1.5;}
+.wrap{max-width:820px; margin:0 auto; display:flex; flex-direction:column; gap:14px;}
+.eyebrow{font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--digital); font-weight:600}
+h1{font-size:24px; font-weight:700; margin:2px 0 0; letter-spacing:-.01em; text-wrap:balance}
+.lead{margin:6px 0 0; color:var(--muted); max-width:68ch}
+.panel{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px;}
+canvas{width:100%; height:170px; display:block}
+.legend{display:flex; gap:16px; font-size:12.5px; color:var(--muted); flex-wrap:wrap; margin-bottom:4px}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.swatch{width:16px; height:4px; border-radius:2px; display:inline-block}
+.controls{display:grid; grid-template-columns:1fr 1fr auto; gap:10px 22px; align-items:end}
+@media (max-width:640px){.controls{grid-template-columns:1fr}}
+.ctl label{display:flex; justify-content:space-between; align-items:baseline; font-weight:600; font-size:14px; margin-bottom:2px}
+.ctl output{font-family:"IBM Plex Mono",monospace; font-weight:500; font-size:13px; color:var(--digital)}
+input[type=range]{width:100%; accent-color:var(--digital); height:26px}
+:is(button,input):focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+.btns{display:flex; gap:8px}
+button{font:inherit; font-weight:600; padding:8px 16px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer}
+button.primary{background:var(--analog); border-color:var(--analog); color:#fff}
+button.primary[aria-pressed="true"]{background:var(--digital); border-color:var(--digital)}
+.mono{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.readout{display:flex; gap:22px; flex-wrap:wrap; font-size:13.5px; color:var(--muted); margin-top:8px}
+.readout b{color:var(--ink); font-weight:600}
+h2{font-size:16px; margin:0 0 6px}
+.explain p{margin:0 0 8px; max-width:70ch}
+.explain p:last-child{margin-bottom:0}
+.why{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+@media (max-width:640px){.why{grid-template-columns:1fr}}
+.why .card{background:var(--soft); border-radius:8px; padding:10px 12px}
+.why .card b{display:block; margin-bottom:2px}
+.why .card{font-size:13.5px}
+.foot{font-size:12.5px; color:var(--muted)}
+.foot b{color:var(--ink)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Demo: interaktiver Inhalt in einem Teams-Reiter</div>
+    <h1>Ausprobieren statt zuschauen</h1>
+    <p class="lead">Im Informatik-Grundlagenfach (GYM1) behandeln wir die «binäre Welt»: Wie werden Bilder, Farben und eben auch <b>Töne</b> zu Nullen und Einsen? Genau das können Sie hier selbst erleben. Bewegen Sie die zwei Regler und drücken Sie auf ♫ Melodie.</p>
+  </header>
+
+  <div class="panel">
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--analog)"></span>Original (analog)</span>
+      <span><span class="swatch" style="background:var(--digital)"></span>was der Computer speichert (digital)</span>
+    </div>
+    <canvas id="cv" width="1560" height="340" aria-label="Wellenform: analoges Signal und digitale Treppenkurve"></canvas>
+    <div class="controls">
+      <div class="ctl">
+        <label for="rate">Wie oft wird gemessen? <output id="rateOut"></output></label>
+        <input type="range" id="rate" min="0" max="4" step="1" value="2">
+      </div>
+      <div class="ctl">
+        <label for="bits">Wie fein wird gemessen? <output id="bitsOut"></output></label>
+        <input type="range" id="bits" min="1" max="16" step="1" value="8">
+      </div>
+      <div class="btns">
+        <button id="play" class="primary" aria-pressed="false">▶ Ton</button>
+        <button id="melody">♫ Melodie</button>
+      </div>
+    </div>
+    <div class="readout">
+      <span>Speicherbedarf: <b class="mono" id="ds"></b> pro Sekunde Ton</span>
+      <span>erste Messwerte binär: <b class="mono" id="bytes"></b></span>
+    </div>
+  </div>
+
+  <div class="panel explain">
+    <h2>Was passiert hier?</h2>
+    <p>Ein Ton ist eine Schallwelle (grüne Kurve). Ein Computer kann keine Wellen speichern, nur Zahlen. Also misst er die Welle viele Male pro Sekunde und rundet jeden Messwert auf eine feste Stufe: Es entsteht die orange Treppenkurve, und jede Stufe wird als Binärzahl gespeichert.</p>
+    <p>Der linke Regler steuert, <b>wie oft</b> gemessen wird: Bei wenigen Messungen klingt die Melodie dumpf und kaputt, bei vielen fast perfekt. Der rechte Regler steuert, <b>wie fein</b> gemessen wird: Mit wenigen Stufen rauscht und knarzt es («Lo-Fi»), mit vielen Stufen klingt es sauber. Ein Telefon nutzt etwa 8'000 Messungen pro Sekunde, eine Musik-CD 44'100, und man hört den Unterschied hier sofort.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Warum zeigen wir Ihnen das?</h2>
+    <div class="why">
+      <div class="card"><b>Direkt erlebbar</b>Die Lernenden klicken in Teams auf einen Reiter und probieren selbst, ohne Login, ohne Installation, ohne «öffnet das mal auf Seite 12».</div>
+      <div class="card"><b>Mit Papier unmöglich</b>Hören, sehen und verändern gleichzeitig: Diese Art von Aha-Erlebnis kann kein Arbeitsblatt leisten.</div>
+      <div class="card"><b>In Minuten erstellt</b>Diese Seite wurde mit KI-Unterstützung in wenigen Minuten generiert, inklusive der Erklärtexte. Der Aufwand ist kleiner als ein Arbeitsblatt.</div>
+    </div>
+  </div>
+
+  <p class="foot">So kommt so etwas in Ihr Teams: Kanal öffnen → <b>+</b> in der Tab-Leiste → <b>Apps</b> → <b>Website</b> → Name und Link eintragen. Fertig.</p>
+</div>
+
+<script>
+"use strict";
+const RATES=[2000,4000,8000,22050,44100];
+const $=id=>document.getElementById(id);
+const cv=$("cv"), ctx2=cv.getContext("2d");
+const fmt=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,"'");
+let ac=null, src=null, playing=false, timer=null;
+const FREQ=440;
+function waveVal(type,ph){const p=ph-Math.floor(ph);return type==="square"?(p<0.5?1:-1):Math.sin(2*Math.PI*p);}
+function st(){return {rate:RATES[+$("rate").value], bits:+$("bits").value};}
+function quant(v,bits){const L=Math.pow(2,bits)-1;return (Math.round((v*0.5+0.5)*L)/L)*2-1;}
+function draw(){
+  const {rate,bits}=st();
+  const W=cv.width,H=cv.height,mid=H/2,amp=H*0.38;
+  const css=getComputedStyle(document.documentElement), col=n=>css.getPropertyValue(n).trim();
+  ctx2.clearRect(0,0,W,H);
+  const T=3/FREQ, L=Math.pow(2,bits);
+  ctx2.strokeStyle=col("--grid"); ctx2.lineWidth=1;
+  if(L<=32){for(let i=0;i<L;i++){const y=mid-((i/(L-1))*2-1)*amp;ctx2.beginPath();ctx2.moveTo(0,y);ctx2.lineTo(W,y);ctx2.stroke();}}
+  ctx2.strokeStyle=col("--digital"); ctx2.lineWidth=3; ctx2.beginPath();
+  for(let x=0;x<=W;x++){
+    const t=x/W*T, ts=Math.floor(t*rate)/rate;
+    const y=mid-quant(waveVal("sine",ts*FREQ),bits)*amp;
+    x===0?ctx2.moveTo(x,y):ctx2.lineTo(x,y);
+  }
+  ctx2.stroke();
+  const n=Math.floor(T*rate);
+  if(n<=90){ctx2.fillStyle=col("--digital");
+    for(let i=0;i<=n;i++){const t=i/rate;if(t>T)break;
+      ctx2.beginPath();ctx2.arc(t/T*W,mid-quant(waveVal("sine",t*FREQ),bits)*amp,4.5,0,7);ctx2.fill();}}
+  ctx2.strokeStyle=col("--analog"); ctx2.lineWidth=2.5; ctx2.beginPath();
+  for(let x=0;x<=W;x++){const t=x/W*T,y=mid-waveVal("sine",t*FREQ)*amp;x===0?ctx2.moveTo(x,y):ctx2.lineTo(x,y);}
+  ctx2.stroke();
+  $("rateOut").textContent=fmt(rate)+" Mal pro Sekunde";
+  $("bitsOut").textContent=bits+" Bit = "+fmt(L)+" Stufen";
+  const byt=rate*bits/8;
+  $("ds").textContent=byt>=1000?fmt(byt/1000)+" kB":fmt(byt)+" Byte";
+  const parts=[];
+  for(let i=0;i<3;i++){
+    const q=Math.round((quant(waveVal("sine",(i/rate)*FREQ),bits)*0.5+0.5)*(L-1));
+    parts.push(q.toString(2).padStart(bits,"0"));
+  }
+  $("bytes").textContent=parts.join(" ")+" …";
+}
+function buildBuffer(melody){
+  const sr=ac.sampleRate, {rate,bits}=st();
+  const dur=melody?2.4:1.0;
+  const buf=ac.createBuffer(1,Math.floor(sr*dur),sr), d=buf.getChannelData(0);
+  const notes=melody?[523,659,784,1047,784,659,523,659,784,1047,1319,1047]:null;
+  const nd=dur/(notes?notes.length:1);
+  for(let i=0;i<d.length;i++){
+    const t=i/sr;
+    const f=notes?notes[Math.min(notes.length-1,Math.floor(t/nd))]:FREQ;
+    const ts=Math.floor(t*rate)/rate;
+    d[i]=quant(waveVal(notes?"square":"sine",ts*f),bits)*0.22;
+  }
+  return buf;
+}
+function stop(){if(src){try{src.stop()}catch(e){}src=null;}playing=false;$("play").setAttribute("aria-pressed","false");$("play").textContent="▶ Ton";}
+function start(melody){
+  if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();
+  ac.resume(); stop();
+  src=ac.createBufferSource(); src.buffer=buildBuffer(melody); src.loop=true;
+  src.connect(ac.destination); src.start();
+  playing=true; $("play").setAttribute("aria-pressed","true"); $("play").textContent="■ Stopp";
+  src._m=!!melody;
+}
+$("play").addEventListener("click",()=>{playing?stop():start(false);});
+$("melody").addEventListener("click",()=>start(true));
+["rate","bits"].forEach(id=>$(id).addEventListener("input",()=>{draw();if(playing){clearTimeout(timer);timer=setTimeout(()=>{if(playing)start(src&&src._m)},120);}}));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+draw();
+</script>
