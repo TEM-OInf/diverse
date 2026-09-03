@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sampling: analog und digital</title>
+<style>
+:root{
+  --bg:#FAF9F5;
+  --panel:#FFFFFF;
+  --ink:#1C1D21;
+  --muted:#6B6A63;
+  --line:#DDDACF;
+  --analog:#0E7C66;
+  --digital:#C2451E;
+  --grid:#E7E4DA;
+  --focus:#0E7C66;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+body{padding:8px}
+.panel{
+  width:100%;
+  max-width:1200px;
+  margin:0 auto;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px 12px 12px;
+}
+.legend{
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+  margin-bottom:2px;
+  font-size:12.5px;
+  color:var(--muted);
+}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{width:16px;height:4px;border-radius:2px;display:inline-block}
+canvas{display:block;width:100%;height:175px}
+.controls{
+  display:grid;
+  grid-template-columns:minmax(240px,1fr) minmax(240px,1fr) auto;
+  gap:8px 18px;
+  align-items:end;
+}
+.ctl label{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:baseline;
+  margin-bottom:1px;
+  font-size:13px;
+  font-weight:700;
+}
+.ctl output{
+  white-space:nowrap;
+  color:var(--digital);
+  font-family:Consolas,"Courier New",monospace;
+  font-size:12px;
+  font-weight:500;
+}
+input[type=range]{width:100%;height:24px;accent-color:var(--digital)}
+.btns{display:flex;gap:7px;padding-bottom:1px}
+button{
+  min-height:34px;
+  padding:7px 14px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--panel);
+  color:var(--ink);
+  font:600 13px Arial,Helvetica,sans-serif;
+  cursor:pointer;
+  white-space:nowrap;
+}
+button.primary{background:var(--analog);border-color:var(--analog);color:#fff}
+button.primary[aria-pressed="true"]{background:var(--digital);border-color:var(--digital)}
+:is(button,input):focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (max-width:760px){
+  body{padding:5px}
+  .panel{padding:8px 9px 10px}
+  canvas{height:155px}
+  .controls{grid-template-columns:1fr 1fr}
+  .btns{grid-column:1/-1}
+}
+@media (max-width:520px){
+  .controls{grid-template-columns:1fr}
+  .btns{grid-column:auto}
+  .ctl label{font-size:12.5px}
+  canvas{height:145px}
+}
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="legend" aria-label="Legende">
+    <span><span class="swatch" style="background:var(--analog)"></span>Original (analog)</span>
+    <span><span class="swatch" style="background:var(--digital)"></span>was der Computer speichert (digital)</span>
+  </div>
+
+  <canvas id="cv" width="1560" height="320" aria-label="Wellenform: analoges Signal und digitale Treppenkurve"></canvas>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="rate">Wie oft wird gemessen? <output id="rateOut"></output></label>
+      <input type="range" id="rate" min="0" max="4" step="1" value="2">
+    </div>
+
+    <div class="ctl">
+      <label for="bits">Wie fein wird gemessen? <output id="bitsOut"></output></label>
+      <input type="range" id="bits" min="1" max="16" step="1" value="8">
+    </div>
+
+    <div class="btns">
+      <button id="play" class="primary" aria-pressed="false">▶ Ton</button>
+      <button id="melody">♫ Melodie</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const RATES=[2000,4000,8000,22050,44100];
+const $=id=>document.getElementById(id);
+const cv=$("cv"), ctx2=cv.getContext("2d");
+const fmt=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,"'");
+let ac=null, src=null, playing=false, timer=null;
+const FREQ=440;
+
+function waveVal(type,ph){
+  const p=ph-Math.floor(ph);
+  return type==="square"?(p<0.5?1:-1):Math.sin(2*Math.PI*p);
+}
+function st(){return {rate:RATES[+$("rate").value],bits:+$("bits").value};}
+function quant(v,bits){
+  const L=Math.pow(2,bits)-1;
+  return (Math.round((v*0.5+0.5)*L)/L)*2-1;
+}
+function draw(){
+  const {rate,bits}=st();
+  const W=cv.width,H=cv.height,mid=H/2,amp=H*0.38;
+  const css=getComputedStyle(document.documentElement),col=n=>css.getPropertyValue(n).trim();
+  ctx2.clearRect(0,0,W,H);
+  const T=3/FREQ,L=Math.pow(2,bits);
+
+  ctx2.strokeStyle=col("--grid");
+  ctx2.lineWidth=1;
+  if(L<=32){
+    for(let i=0;i<L;i++){
+      const y=mid-((i/(L-1))*2-1)*amp;
+      ctx2.beginPath();ctx2.moveTo(0,y);ctx2.lineTo(W,y);ctx2.stroke();
+    }
+  }
+
+  ctx2.strokeStyle=col("--digital");
+  ctx2.lineWidth=3;
+  ctx2.beginPath();
+  for(let x=0;x<=W;x++){
+    const t=x/W*T,ts=Math.floor(t*rate)/rate;
+    const y=mid-quant(waveVal("sine",ts*FREQ),bits)*amp;
+    x===0?ctx2.moveTo(x,y):ctx2.lineTo(x,y);
+  }
+  ctx2.stroke();
+
+  const n=Math.floor(T*rate);
+  if(n<=90){
+    ctx2.fillStyle=col("--digital");
+    for(let i=0;i<=n;i++){
+      const t=i/rate;
+      if(t>T)break;
+      ctx2.beginPath();
+      ctx2.arc(t/T*W,mid-quant(waveVal("sine",t*FREQ),bits)*amp,4.5,0,7);
+      ctx2.fill();
+    }
+  }
+
+  ctx2.strokeStyle=col("--analog");
+  ctx2.lineWidth=2.5;
+  ctx2.beginPath();
+  for(let x=0;x<=W;x++){
+    const t=x/W*T,y=mid-waveVal("sine",t*FREQ)*amp;
+    x===0?ctx2.moveTo(x,y):ctx2.lineTo(x,y);
+  }
+  ctx2.stroke();
+
+  $("rateOut").textContent=fmt(rate)+" Mal/s";
+  $("bitsOut").textContent=bits+" Bit = "+fmt(L)+" Stufen";
+}
+
+function buildBuffer(melody){
+  const sr=ac.sampleRate,{rate,bits}=st();
+  const dur=melody?2.4:1.0;
+  const buf=ac.createBuffer(1,Math.floor(sr*dur),sr),d=buf.getChannelData(0);
+  const notes=melody?[523,659,784,1047,784,659,523,659,784,1047,1319,1047]:null;
+  const nd=dur/(notes?notes.length:1);
+  for(let i=0;i<d.length;i++){
+    const t=i/sr;
+    const f=notes?notes[Math.min(notes.length-1,Math.floor(t/nd))]:FREQ;
+    const ts=Math.floor(t*rate)/rate;
+    d[i]=quant(waveVal(notes?"square":"sine",ts*f),bits)*0.22;
+  }
+  return buf;
+}
+
+function stop(){
+  if(src){try{src.stop()}catch(e){}src=null;}
+  playing=false;
+  $("play").setAttribute("aria-pressed","false");
+  $("play").textContent="▶ Ton";
+}
+function start(melody){
+  if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();
+  ac.resume();
+  stop();
+  src=ac.createBufferSource();
+  src.buffer=buildBuffer(melody);
+  src.loop=true;
+  src.connect(ac.destination);
+  src.start();
+  playing=true;
+  $("play").setAttribute("aria-pressed","true");
+  $("play").textContent="■ Stopp";
+  src._m=!!melody;
+}
+
+$("play").addEventListener("click",()=>{playing?stop():start(false);});
+$("melody").addEventListener("click",()=>start(true));
+["rate","bits"].forEach(id=>$(id).addEventListener("input",()=>{
+  draw();
+  if(playing){
+    clearTimeout(timer);
+    timer=setTimeout(()=>{if(playing)start(src&&src._m)},120);
+  }
+}));
+draw();
+</script>
+</body>
+</html>
