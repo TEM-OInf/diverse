@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demonstrator: Kollegium auf Teams</title>
+<style>
+:root{
+  --brand:#5b5fc7; --brand-dark:#4f52b2; --brand-light:#e8ebfa;
+  --bg-rail:#ebebeb; --bg-panel:#f0f0f0; --bg-main:#f5f5f5;
+  --txt:#242424; --txt2:#616161; --txt3:#8a8a8a; --line:#e0e0e0; --line2:#d1d1d1;
+  --ok:#0f7b0f; --warn:#c50f1f; --amber:#835b00;
+  --demo:#1b1b2f; --demo2:#2b2b45;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:"Segoe UI","Segoe UI Web (West European)",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif;font-size:14px;color:var(--txt);background:#111}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:var(--brand);text-decoration:none}
+#app{display:flex;flex-direction:column;height:100vh;min-height:640px}
+
+/* Demonstrator-Leiste */
+#demobar{background:var(--demo);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid #000;font-size:13px}
+#demobar .chips{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.chip{background:var(--demo2);border:1px solid #44446a;color:#e6e6f0;padding:5px 10px;border-radius:14px;font-size:12px;line-height:1.2;transition:.15s}
+.chip:hover{background:#3a3a5c}
+.chip.active{background:var(--brand);border-color:var(--brand)}
+.chip .n{display:inline-block;background:rgba(255,255,255,.18);border-radius:10px;padding:0 6px;margin-right:5px;font-weight:600}
+#reset{color:#aab;font-size:12px;text-decoration:underline}
+
+/* Teams-Fenster */
+#teams{flex:1;display:flex;flex-direction:column;min-height:0;background:var(--bg-main);position:relative}
+#topbar{height:48px;background:var(--bg-rail);display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid var(--line2)}
+#topbar .logo{width:24px;height:24px;border-radius:5px;background:var(--brand);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+#topbar .nav{display:flex;gap:2px;color:var(--txt3)}
+#topbar .nav span{padding:2px 6px}
+#topbar .search{flex:0 1 640px;margin:0 auto;height:32px;background:#fff;border:1px solid var(--line2);border-radius:6px;display:flex;align-items:center;padding:0 10px;color:var(--txt3);gap:8px}
+#topbar .right{display:flex;align-items:center;gap:10px;color:var(--txt2);font-size:13px}
+.avatar{width:28px;height:28px;border-radius:50%;background:#7a7ad6;color:#fff;display:inline-grid;place-items:center;font-size:11px;font-weight:600;flex:none}
+.avatar.s{width:22px;height:22px;font-size:9px}
+.avatar.st{background:#3d8f6b}
+
+#body{flex:1;display:flex;min-height:0}
+#rail{width:68px;background:var(--bg-rail);display:flex;flex-direction:column;align-items:center;padding-top:6px;gap:2px;border-right:1px solid var(--line2)}
+.railbtn{width:60px;padding:7px 0 5px;border-radius:6px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--txt2)}
+.railbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5}
+.railbtn.active{color:var(--brand);position:relative}
+.railbtn.active:before{content:"";position:absolute;left:-4px;top:10px;width:3px;height:22px;border-radius:2px;background:var(--brand)}
+
+#panel{width:290px;background:var(--bg-panel);border-right:1px solid var(--line2);display:flex;flex-direction:column;min-height:0}
+#panel .back{padding:14px 14px 6px;display:flex;align-items:center;gap:6px;font-size:13px}
+#panel .back button{display:flex;align-items:center;gap:6px;color:var(--txt);padding:4px 6px;border-radius:4px}
+#panel .back button:hover{background:#e3e3e3}
+.teamhead{padding:6px 14px 10px}
+.teamhead .tlogo{width:52px;height:52px;border:1px solid var(--line2);background:#fff;display:grid;place-items:center;font-weight:700;font-size:24px;margin-bottom:8px;border-radius:2px}
+.teamhead .tname{font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+.grp{padding:4px 8px 0}
+.grp .gh{font-size:12px;color:var(--txt2);padding:8px 6px 4px;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none}
+.grp .gh .tri{display:inline-block;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--txt2);transition:.15s}
+.grp.closed .gh .tri{transform:rotate(-90deg)}
+.grp.closed .ch{display:none}
+.ch{display:flex;align-items:center;gap:6px;padding:6px 8px 6px 26px;border-radius:4px;font-size:14px;color:var(--txt);cursor:pointer;position:relative}
+.ch:hover{background:#e6e6e6}
+.ch.active{background:#fff;font-weight:600}
+.ch.active:before{content:"";position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:2px;background:var(--brand)}
+.ch .dot{width:6px;height:6px;border-radius:50%;background:var(--brand);margin-left:auto}
+.teamlink{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;cursor:pointer;font-size:13px}
+.teamlink:hover{background:#e6e6e6}
+.teamlink .tl{width:26px;height:26px;border:1px solid var(--line2);background:#fff;display:grid;place-items:center;font-weight:700;font-size:11px}
+
+#main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+#chanhead{height:52px;display:flex;align-items:center;padding:0 16px;gap:14px;background:#fff;border-bottom:1px solid var(--line)}
+#chanhead .cicon{font-size:26px;font-weight:300;color:var(--txt2);line-height:1}
+#chanhead .cname{font-weight:700;font-size:18px;white-space:nowrap}
+#tabs{display:flex;gap:2px;align-items:stretch;height:52px;margin-left:8px;overflow-x:auto}
+.tab{padding:0 10px;display:flex;align-items:center;font-size:14px;color:var(--txt2);border-bottom:3px solid transparent;white-space:nowrap}
+.tab:hover{color:var(--txt)}
+.tab.active{color:var(--txt);font-weight:600;border-bottom-color:var(--brand)}
+.tab.plus{color:var(--txt3);font-size:18px}
+#chanhead .actions{margin-left:auto;display:flex;align-items:center;gap:14px;color:var(--txt2);font-size:13px}
+#chanhead .meet{border:1px solid var(--line2);border-radius:4px;padding:5px 10px;display:flex;align-items:center;gap:6px;background:#fff}
+#content{flex:1;overflow:auto;position:relative}
+
+/* Beiträge */
+.posts{max-width:900px;margin:0 auto;padding:18px 16px 80px}
+.post{background:#fff;border:1px solid var(--line);border-radius:4px;margin-bottom:14px}
+.post .ph{display:flex;gap:10px;padding:12px 14px 0}
+.post .ph .meta{font-size:13px}
+.post .ph .meta b{font-weight:600}
+.post .ph .meta span.when{color:var(--txt3);margin-left:8px;font-size:12px}
+.post .pb{padding:6px 14px 12px 54px;line-height:1.45}
+.post .pb h4{margin:4px 0 8px;font-size:16px}
+.post .pr{border-top:1px solid var(--line);padding:8px 14px;font-size:13px;color:var(--txt2);display:flex;gap:10px;align-items:center}
+.post.ann .banner{background:linear-gradient(90deg,#5b5fc7,#7f84e0);color:#fff;padding:14px 16px;font-size:18px;font-weight:600;border-radius:4px 4px 0 0}
+.post.ann .sub{background:#eef0fb;padding:6px 16px;font-size:12px;color:var(--brand-dark);font-weight:600;letter-spacing:.02em}
+.post.ann .pb{padding:12px 16px}
+.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:#eee;color:var(--txt2);font-weight:600;margin-left:4px}
+.pill.owner{background:var(--brand-light);color:var(--brand-dark)}
+.reply{display:flex;gap:10px;padding:8px 14px 10px;border-top:1px solid var(--line);font-size:13px;line-height:1.4}
+.reply .who{font-size:12px;color:var(--txt3)}
+.compose{position:sticky;bottom:0;display:flex;justify-content:center;padding:10px 0 4px;background:linear-gradient(transparent,var(--bg-main) 40%)}
+.compose button{background:var(--brand);color:#fff;padding:8px 14px;border-radius:4px;font-weight:600;font-size:13px}
+.compose button.dis{background:#c7c7c7;cursor:not-allowed}
+.lc{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:4px;padding:4px 9px;margin:8px 6px 0 0;font-size:12.5px;background:#fafafa;color:var(--txt)}
+.lc .i{width:16px;height:16px;border-radius:3px;display:inline-grid;place-items:center;font-size:8px;font-weight:700;color:#fff}
+.lc .spl{background:#038387}.lc .xl{background:#107c41}.lc .on{background:#7719aa}.lc .zu{background:#5b5fc7}.lc .wd{background:#185abd}
+.poll{margin-top:8px;border:1px solid var(--line);border-radius:4px;padding:8px 10px;font-size:12.5px;background:#fafafa}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:3px;background:#eef;color:#334;margin:1px 3px 1px 0;white-space:nowrap}
+.tag.fs{background:#e6f0fa;color:#1a4d7a}.tag.ag{background:#fbe9e0;color:#8a3a12}.tag.sl{background:var(--brand-light);color:var(--brand-dark)}.tag.ok{background:#e6f4e6;color:var(--ok)}
+
+/* Erwähnungen, Medien */
+.mn{color:var(--brand-dark);font-weight:600;background:#eef0fb;border-radius:3px;padding:0 4px}
+.mn.g{color:#0f5c2e;background:#e4f3e8}
+.vid{display:flex;gap:12px;border:1px solid var(--line);border-radius:6px;margin-top:10px;overflow:hidden;background:#fafafa;max-width:560px}
+.vid .th{width:180px;height:100px;flex:none;background:linear-gradient(135deg,#2b2b45,#5b5fc7);display:grid;place-items:center;color:#fff;font-size:30px}
+.vid .tx{padding:10px 12px 10px 0;font-size:12.5px;line-height:1.4}
+.vid .tx b{display:block;font-size:13.5px}
+.vid .tx small{color:var(--txt3)}
+.loop{border:1px solid #c7c7e8;border-radius:6px;margin-top:10px;background:#fff;max-width:560px;font-size:12.5px}
+.loop .lh{background:#f3f3fb;padding:5px 10px;font-size:11px;color:var(--brand-dark);font-weight:600;display:flex;justify-content:space-between;border-radius:6px 6px 0 0}
+.loop ul{list-style:none;margin:0;padding:6px 10px}
+.loop li{padding:3px 0;display:flex;gap:8px;align-items:center}
+.loop li .cb{width:14px;height:14px;border:1px solid #888;border-radius:3px;display:inline-grid;place-items:center;font-size:10px}
+.loop li .cb.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.map{margin-top:10px;border:1px solid var(--line);border-radius:6px;overflow:hidden;max-width:560px;background:#fff}
+.map svg{display:block;width:100%;height:auto}
+.map .cap{font-size:11px;color:var(--txt3);padding:4px 8px}
+.ee{font-size:12px;color:var(--txt2);font-style:italic}
+/* Startseite */
+.sp{padding:0 0 60px}
+.sp .hero{background:#fff;border-bottom:1px solid var(--line);padding:16px 28px;display:flex;align-items:flex-end;justify-content:space-between}
+.sp .hero h1{margin:0;font-size:22px;font-weight:700}
+.sp .hero .sub{color:var(--txt2);font-size:13px;margin-top:2px}
+.sp .hero .edit{font-size:12px;color:var(--txt2);border:1px solid var(--line2);border-radius:4px;padding:5px 10px;background:#fff}
+.sp .grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;padding:18px 28px;max-width:1240px}
+.wp{background:#fff;border:1px solid var(--line);border-radius:4px;padding:14px 16px}
+.wp h3{margin:0 0 10px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.wp h3 small{font-weight:400;font-size:11px;color:var(--txt3)}
+.ql{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ql a{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:6px;padding:12px 12px 10px;color:var(--txt);background:#fafafa;transition:.12s}
+.ql a:hover{border-color:var(--brand);background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.ql a .ic{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;font-size:15px;color:#fff}
+.ql a b{font-size:13px;font-weight:600}
+.ql a small{font-size:11px;color:var(--txt3)}
+.ev{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.ev:last-child{border-bottom:0}
+.ev .d{width:44px;flex:none;text-align:center;border-radius:4px;background:#f3f3f3;padding:4px 0;line-height:1.1}
+.ev .d b{display:block;font-size:17px}
+.ev .d span{font-size:10px;text-transform:uppercase;color:var(--txt2)}
+.ev .t b{display:block;font-size:13px}
+.ev .t span{font-size:12px;color:var(--txt2)}
+.cat{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.news{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.news:last-child{border-bottom:0}
+.news .thumb{width:70px;height:54px;border-radius:4px;flex:none;background:linear-gradient(135deg,#5b5fc7,#9fa3ec)}
+.news .thumb.g{background:linear-gradient(135deg,#0f7b0f,#7bd07b)}
+.news .thumb.o{background:linear-gradient(135deg,#c26b00,#f4b860)}
+.news b{display:block;font-size:14px}
+.news p{margin:3px 0 0;font-size:12.5px;color:var(--txt2);line-height:1.4}
+.news small{color:var(--txt3);font-size:11px}
+.contact{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.contact:last-child{border-bottom:0}
+.contact b{display:block;font-weight:600}
+.contact span{color:var(--txt2);font-size:12px}
+.contact .chat{margin-left:auto;color:var(--brand);font-size:12px;white-space:nowrap}
+.owner{font-size:11px;color:var(--txt3);padding:8px 28px}
+
+/* Listen */
+.list{padding:14px 20px 60px}
+.cmdbar{display:flex;gap:14px;align-items:center;padding:6px 0 12px;font-size:13px;color:var(--txt2);flex-wrap:wrap}
+.cmdbar .b{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:4px}
+.cmdbar .b.primary{color:var(--brand);font-weight:600}
+.cmdbar .sp{flex:1;padding:0}
+.cmdbar input{border:1px solid var(--line2);border-radius:4px;padding:6px 10px;font:inherit;width:280px;background:#fff}
+.chips2{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.fchip{border:1px solid var(--line2);border-radius:14px;padding:3px 10px;font-size:12px;background:#fff;color:var(--txt2)}
+.fchip.on{background:var(--brand-light);border-color:var(--brand);color:var(--brand-dark);font-weight:600}
+table.sl{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);font-size:13px}
+table.sl th{text-align:left;font-weight:600;color:var(--txt2);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line);background:#fafafa;white-space:nowrap}
+table.sl td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:middle}
+table.sl tr:hover td{background:#f7f7fb}
+table.sl tr.grp td{background:#f0f0f6;font-weight:600;font-size:12.5px}
+table.sl .fi{display:inline-flex;align-items:center;gap:8px}
+.fico{width:18px;height:22px;border-radius:2px;display:inline-grid;place-items:center;font-size:8px;font-weight:700;color:#fff;flex:none}
+.fico.pdf{background:#c50f1f}.fico.docx{background:#185abd}.fico.xlsx{background:#107c41}
+.chatbtn{color:var(--brand);font-size:12px;white-space:nowrap;border:1px solid var(--line2);border-radius:4px;padding:3px 8px;background:#fff}
+.chatbtn:hover{background:var(--brand-light)}
+.note{font-size:12px;color:var(--txt2);background:#fff;border:1px solid var(--line);border-left:3px solid var(--brand);padding:8px 12px;border-radius:3px;margin-bottom:12px;line-height:1.4}
+.hl{background:#fff3b0}
+
+/* Forms */
+.fbox{display:grid;grid-template-columns:1fr 1.3fr;gap:14px;margin-bottom:14px}
+.fcol{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.fhead{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.fhead b{font-size:14px}.fhead small{width:100%;color:var(--txt3);font-size:11px}
+.fcol label{display:block;font-size:12px;color:var(--txt2);margin:6px 0}
+.fcol input,.fcol select{display:block;width:100%;font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line2);border-radius:4px;margin-top:2px;background:#fff;color:var(--txt)}
+.fsend{background:#038387;color:#fff;padding:7px 16px;border-radius:4px;font-weight:600;margin-top:10px}
+.fok{background:#e6f4e6;color:var(--ok);border-radius:4px;padding:10px 12px;font-size:13px;line-height:1.45}
+table.sl.xs{font-size:12px}table.sl.xs td,table.sl.xs th{padding:5px 8px}
+tr.hlrow td{background:#fff8e1}
+/* Kalender */
+.cal{padding:14px 20px 40px}
+.cal .head{display:flex;align-items:center;gap:14px;margin-bottom:10px;font-size:13px}
+.cal .head h2{margin:0;font-size:18px;font-weight:600}
+.cal .head .b{border:1px solid var(--line2);border-radius:4px;padding:4px 10px;background:#fff}
+.calgrid{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--line);background:#fff}
+.calgrid .dh{padding:6px 8px;font-size:12px;color:var(--txt2);border-bottom:1px solid var(--line);border-right:1px solid var(--line);background:#fafafa}
+.calgrid .dc{min-height:88px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:4px 6px;font-size:11.5px}
+.calgrid .dc .dn{font-size:12px;color:var(--txt2);margin-bottom:3px}
+.calgrid .dc.today .dn{color:#fff;background:var(--brand);display:inline-block;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px}
+.calgrid .dc.other{background:#fafafa;color:var(--txt3)}
+.cev{border-left:3px solid;border-radius:2px;padding:2px 5px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cev.c1{border-color:#5b5fc7;background:#eef0fb}
+.cev.c2{border-color:#0f7b0f;background:#e9f5e9}
+.cev.c3{border-color:#c26b00;background:#fdf1e3}
+.cev.c4{border-color:#8a8a8a;background:#f0f0f0}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--txt2);margin:10px 0;flex-wrap:wrap}
+
+/* Räume */
+.rooms{padding:14px 20px 60px}
+.rgrid{display:grid;grid-template-columns:70px repeat(5,1fr);border:1px solid var(--line);background:#fff;font-size:11.5px}
+.rgrid .rh{padding:6px 8px;font-size:12px;color:var(--txt2);border-bottom:1px solid var(--line);border-right:1px solid var(--line);background:#fafafa}
+.rgrid .rt{padding:6px 6px;color:var(--txt2);border-bottom:1px solid #eee;border-right:1px solid var(--line);font-size:11px}
+.rgrid .rt small{display:block;color:var(--txt3)}
+.rgrid .rd{border-bottom:1px solid #eee;border-right:1px solid var(--line);padding:3px}
+.rc{border-radius:3px;padding:5px 6px;min-height:30px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc.sp{background:#ececec;color:#555}
+.rc.res{background:#eef0fb;color:var(--brand-dark);border-left:3px solid var(--brand)}
+.rc.mine{background:#e6f4e6;color:var(--ok);border-left:3px solid var(--ok);font-weight:600}
+.rc.free{color:#bbb;cursor:pointer;border:1px dashed #e0e0e0}
+.rc.free:hover{background:#f4faf4;color:var(--ok);border-color:var(--ok)}
+.rc.il{background:#e0f2f7;color:#0e7490;border-left:3px solid #0e7490;cursor:pointer}
+.rc.none{min-height:30px}
+/* Prüfungsplan */
+.side2{display:grid;grid-template-columns:1fr 300px;gap:16px}
+.weeks{display:grid;gap:8px}
+.wk{background:#fff;border:1px solid var(--line);border-radius:4px;padding:8px 12px;display:grid;grid-template-columns:150px 1fr 90px;align-items:center;gap:10px}
+.wk .wn{font-weight:600;font-size:13px}
+.wk .wn small{display:block;font-weight:400;color:var(--txt3)}
+.wk .ex{display:flex;gap:6px;flex-wrap:wrap}
+.wk .ex span{border:1px solid var(--line2);border-radius:3px;padding:2px 7px;font-size:12px;background:#fafafa}
+.wk .cnt{text-align:right;font-size:12px;font-weight:600}
+.wk .cnt{color:var(--txt2)}
+
+/* Alle Teams */
+.allteams{padding:20px 28px}
+.allteams h2{margin:0 0 14px;font-size:18px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;max-width:700px}
+.tcard{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px;cursor:pointer;min-height:110px;display:flex;flex-direction:column;gap:6px}
+.tcard:hover{box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.tcard .tl{width:40px;height:40px;border:1px solid var(--line2);display:grid;place-items:center;font-weight:700;font-size:15px}
+.tcard b{font-size:14px}
+.tcard small{color:var(--txt3);font-size:11px}
+.faq{padding:18px 28px;max-width:820px}
+
+/* Demo-Overlay */
+.demo-highlight{outline:3px solid #ff8c00 !important;outline-offset:3px;border-radius:4px;animation:pulse 1.2s ease-in-out 3}
+@keyframes pulse{0%,100%{outline-color:#ff8c00}50%{outline-color:rgba(255,140,0,.15)}}
+#cmp{position:absolute;right:18px;bottom:18px;width:500px;background:#fff;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.28);border:1px solid #ccc;display:none;z-index:50;font-size:13px;overflow:hidden}
+#cmp.show{display:block}
+#cmp .h{background:var(--demo);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-weight:600}
+#cmp .h button{color:#aab;font-size:16px}
+#cmp .q{padding:12px 14px 6px;font-size:14px;font-weight:600;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+#cmp .q button{color:var(--txt3);font-size:15px;line-height:1}
+#cmp .cols{display:grid;grid-template-columns:1fr 1fr}
+#cmp .col{padding:8px 14px 12px}
+#cmp .col:first-child{border-right:1px solid var(--line);background:#fbf7f7}
+#cmp .col:last-child{background:#f4faf4}
+#cmp .col h5{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--txt2);display:flex;justify-content:space-between}
+#cmp .col h5 b{font-size:16px;color:var(--warn)}
+#cmp .col:last-child h5 b{color:var(--ok)}
+#cmp ol{margin:0;padding-left:18px;line-height:1.45;font-size:12.5px}
+#cmp .foot{padding:8px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--txt2);display:flex;justify-content:space-between;align-items:center;gap:10px}
+#cmp .foot .ds{font-size:11px}
+#cmp .nextbtn{background:var(--brand);color:#fff;padding:5px 10px;border-radius:4px;font-weight:600;font-size:12px;white-space:nowrap}
+#cmp .nextbtn.sec{background:#e6e6e6;color:var(--txt)}
+#cmp .q .sub{display:block;font-size:11px;color:var(--brand-dark);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+#intro{position:absolute;inset:0;display:grid;place-items:center;background:rgba(17,17,47,.55);z-index:60}
+#intro .box{background:#fff;border-radius:10px;max-width:580px;padding:26px 30px;box-shadow:0 10px 40px rgba(0,0,0,.35);line-height:1.5}
+#intro h2{margin:0 0 8px;font-size:20px}
+#intro p{margin:6px 0;font-size:14px;color:var(--txt2)}
+#intro button{background:var(--brand);color:#fff;padding:9px 16px;border-radius:5px;font-weight:600;margin-top:12px}
+@media (max-width:1100px){#panel{width:240px} .sp .grid{grid-template-columns:1fr} .side2{grid-template-columns:1fr} #cmp{width:calc(100% - 36px)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="demobar">
+    <span style="font-weight:600;color:#aab;font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-right:4px">Szenarien</span><div class="chips" id="chips"></div>
+    <button id="reset">Zurücksetzen</button>
+  </div>
+
+  <div id="teams">
+    <div id="topbar">
+      <div class="logo">T</div>
+      <div class="nav"><span>‹</span><span>›</span></div>
+      <div class="search">⌕ <span>Suchen (Ctrl+E)</span></div>
+      <div class="right"><span>···</span><span>gymhofwil.ch</span><div class="avatar">DL</div></div>
+    </div>
+    <div id="body">
+      <div id="rail">
+        <button class="railbtn"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0v5l2 3H4l2-3z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>Aktivität</button>
+        <button class="railbtn" id="railCal" title="Öffnet den Kollegiumskalender (Tab Termine)"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Kalender</button>
+        <button class="railbtn active" id="railTeams"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19a6 6 0 0 1 12 0M14 18a4.5 4.5 0 0 1 7 0"/></svg>Teams</button>
+        <button class="railbtn"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4v2h6V4M8 12h8M8 16h5"/></svg>Zuweisungen</button>
+        <button class="railbtn"><svg viewBox="0 0 24 24"><path d="M4 6h16v10H8l-4 4z"/></svg>Chat</button>
+        <button class="railbtn"><svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/></svg></button>
+      </div>
+      <div id="panel"></div>
+      <div id="main">
+        <div id="chanhead"></div>
+        <div id="content"></div>
+      </div>
+    </div>
+    <div id="cmp"></div>
+    <div id="intro">
+      <div class="box">
+        <h2>Was wäre, wenn alles Interne an einem Ort läge?</h2>
+        <p>Die Website bedient heute drei Gruppen: Öffentlichkeit, Lernende und Eltern, Kollegium. Die ersten beiden bleiben dort. Für das Kollegium zeigt diese Nachbildung von Teams, wie Termine, Formulare, Zuständigkeiten und Mitteilungen an einem Ort aussehen könnten: anklickbar statt in PDFs vergraben.</p>
+        <p>Neun kurze Szenarien führen Sie durch: Jedes stellt eine Alltagsfrage, zeigt im Hintergrund die Stelle, wo die Antwort liegt, und vergleicht den Weg von heute mit dem Weg neu. Sie können die Führung jederzeit schliessen und selbst herumklicken. Nichts davon ist eingerichtet, es ist ein Bild zum Diskutieren.</p>
+        <p style="font-size:12px;color:#8a8a8a">Alle Personen sind Platzhalter.</p>
+        <button id="introBtn">Los geht's</button> <button id="introFree" style="background:#eee;color:#242424">Ohne Führung erkunden</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Daten (Platzhalter) ---------- */
+const SL = [
+  {k:'PEJ', n:'Johann Heinrich Pestalozzi', r:'Rektor'},
+  {k:'MOM', n:'Maria Montessori', r:'Konrektorin, Stufenleitung 29'},
+  {k:'KOJ', n:'Janusz Korczak', r:'Konrektor, Stufenleitung 30'},
+  {k:'KEE', n:'Ellen Key', r:'Konrektorin, Stufenleitung 28'},
+];
+const SEK = [{n:'Helen Parkhurst', r:'Sekretariat, Formulare und Termine'},{n:'Emmi Pikler', r:'Sekretariat, Finanzen'}];
+
+const EVENTS = [
+  {d:'2026-09-01', t:'Notenkonferenz Abschlussklassen', c:1, time:'16:15'},
+  {d:'2026-09-03', t:'Fachschaftssitzungen', c:1, time:'12:15'},
+  {d:'2026-09-08', t:'Gesamtkonferenz', c:1, time:'16:15, Aula'},
+  {d:'2026-09-10', t:'Abgabe Maturaarbeit-Disposition', c:3, time:'ganztägig'},
+  {d:'2026-09-14', t:'Klassenkonferenzen GYM1', c:1, time:'16:15'},
+  {d:'2026-09-16', t:'Personalkommission', c:1, time:'17:00, Zimmer 12'},
+  {d:'2026-09-17', t:'Nachprobentermin', c:1, time:'17:15'},
+  {d:'2026-09-21', t:'Intensivwoche 1 (bis 25.9.)', c:2, time:''},
+  {d:'2026-09-24', t:'Frist Exkursionsgesuche 2. Sem.', c:3, time:''},
+  {d:'2026-09-28', t:'Herbstferien (bis 16.10.)', c:4, time:''},
+  {d:'2026-09-09', t:'LernBar: Info Angebot GYM1 (Klassenstunde)', c:5, time:'nach Absprache'},
+  {d:'2026-09-15', t:'Studienberatung: Einzelgespräche GYM4', c:6, time:'auf Anmeldung'},
+  {d:'2026-09-22', t:'TaF: Konzert Musik', c:7, time:'19:00, Aula'},
+  {d:'2026-09-02', t:'Sporttag', c:2, time:'ganztägig'},
+];
+const CATS = {1:'Konferenzen und Sitzungen',2:'Intensivwochen und Anlässe',3:'Fristen',4:'Ferien und Frei',5:'LernBar',6:'Studienberatung',7:'TaF'};
+const CATCOL = ['','#5b5fc7','#0f7b0f','#c26b00','#8a8a8a','#0e7490','#7c3aed','#b45309'];
+
+const FORMS = [
+  {n:'Exkursionsgesuch', cat:'Exkursionen und Intensivwochen', ty:'docx', own:'Sekretariat', ab:'01.08.2026', v:'SJ 26/27'},
+  {n:'Abrechnung Exkursion', cat:'Exkursionen und Intensivwochen', ty:'xlsx', own:'Sekretariat (Finanzen)', ab:'01.08.2026', v:'SJ 26/27'},
+  {n:'Konzept Intensivwochen', cat:'Exkursionen und Intensivwochen', ty:'pdf', own:'Schulleitung', ab:'01.08.2025', v:'gültig'},
+  {n:'Absenzenmeldung Lehrperson', cat:'Absenzen und Stellvertretung', ty:'docx', own:'Sekretariat', ab:'01.08.2026', v:'SJ 26/27'},
+  {n:'Merkblatt Stellvertretungen', cat:'Absenzen und Stellvertretung', ty:'pdf', own:'Schulleitung', ab:'01.08.2026', v:'SJ 26/27'},
+  {n:'Bewertungsraster Maturaarbeit', cat:'Maturaarbeit', ty:'pdf', own:'Steuergruppe MA', ab:'01.02.2026', v:'gültig'},
+  {n:'Betreuungsvereinbarung Maturaarbeit', cat:'Maturaarbeit', ty:'docx', own:'Steuergruppe MA', ab:'01.02.2026', v:'gültig'},
+  {n:'Spesenformular', cat:'Finanzen', ty:'xlsx', own:'Sekretariat (Finanzen)', ab:'01.01.2026', v:'gültig'},
+  {n:'Antrag Weiterbildung', cat:'Personal', ty:'docx', own:'Schulleitung', ab:'01.08.2026', v:'SJ 26/27'},
+];
+
+const ZUST = [
+  {f:'Nachteilsausgleich (Anlaufstelle Lehrpersonen)', k:'MOM', n:'Maria Montessori', s:'KEE', t:[['sl','Schulleitung'],['fs','FS Pädagogik/Psychologie']]},
+  {f:'Stellvertretungen organisieren', k:'Sek', n:'Helen Parkhurst', s:'Emmi Pikler', t:[['sl','Sekretariat']]},
+  {f:'Exkursionen bewilligen', k:'KOJ', n:'Janusz Korczak', s:'PEJ', t:[['sl','Schulleitung'],['fs','FS Deutsch']]},
+  {f:'Maturaarbeit, Steuergruppe', k:'WAM', n:'Martin Wagenschein', s:'FRC', t:[['fs','FS Physik'],['ag','AG Maturaarbeit'],['ag','AG Wissenschaftspropädeutik']]},
+  {f:'Intensivwochen, Koordination', k:'TAS', n:'Sophie Taeuber-Arp', s:'KOJ', t:[['fs','FS Bildnerisches Gestalten'],['ag','AG Intensivwochen']]},
+  {f:'Mediothek', k:'LIA', n:'Astrid Lindgren', s:'—', t:[['fs','FS Deutsch'],['ag','AG Leseförderung']]},
+  {f:'Fachschaftsvorstand Geografie', k:'FEA', n:'Adolphe Ferrière', s:'FRC', t:[['fs','FS Geografie'],['ag','AG BNE']]},
+  {f:'Fachschaftsvorstand Geschichte', k:'ARH', n:'Hannah Arendt', s:'DEJ', t:[['fs','FS Geschichte'],['ag','AG Politische Bildung']]},
+  {f:'Fachschaftsvorstand Informatik', k:'FEP', n:'Philipp Emanuel von Fellenberg', s:'WAM', t:[['fs','FS Informatik'],['ag','AG KI'],['ag','AG Digitalität']]},
+  {f:'AG KI, Leitung', k:'FEP', n:'Philipp Emanuel von Fellenberg', s:'—', t:[['ag','AG KI'],['fs','FS Informatik']]},
+  {f:'Schulpsychologische Beratung (Vermittlung)', k:'KEE', n:'Ellen Key', s:'MOM', t:[['sl','Schulleitung']]},
+  {f:'Raumreservationen (Aula, Labor)', k:'Sek', n:'Emmi Pikler', s:'Helen Parkhurst', t:[['sl','Sekretariat']]},
+  {f:'Personalkommission, Präsidium', k:'DEJ', n:'John Dewey', s:'LIA', t:[['fs','FS Philosophie'],['ag','Personalkommission']]},
+  {f:'Chor und Konzerte', k:'FRC', n:'Célestin Freinet', s:'TAS', t:[['fs','FS Musik'],['ag','AG Kultur']]},
+  {f:'LernBar (Lernstrategien, individuelle Termine)', k:'KEG', n:'Georg Kerschensteiner', s:'LIA', t:[['ag','LernBar-Team'],['fs','FS Biologie']]},
+];
+
+const PRUEF = [
+  {w:'KW 37', r:'7. bis 11. Sept.', ex:['Di: Deutsch (ARH)','Fr: Chemie (TAS)']},
+  {w:'KW 38', r:'14. bis 18. Sept.', ex:['Mi: Englisch (LIA)']},
+  {w:'KW 39', r:'21. bis 25. Sept.', ex:['Mo: Mathematik (WAM)','Mi: Französisch (FRC)']},
+  {w:'KW 40', r:'28.9. bis 2.10.', ex:[], note:'Herbstferien'},
+  {w:'KW 43', r:'19. bis 23. Okt.', ex:['Do: Geschichte (DEJ)']},
+  {w:'KW 44', r:'26. bis 30. Okt.', ex:[]},
+];
+
+const ROOMS = ['Aula','Labor Chemie','Zimmer 12','Informatik 1','Musikzimmer','Gruppenraum Mediothek'];
+const LESSONS = ['07:30','08:20','09:10','10:15','11:05','11:55','13:30','14:20','15:10','16:00'];
+const DAYS = ['Mo 14.9.','Di 15.9.','Mi 16.9.','Do 17.9.','Fr 18.9.'];
+// Belegung je Raum: Stundenplan (Klasse) oder Reservation (Kürzel, Zweck); Index [Tag][Lektion]
+const OCC = {
+  'Aula':{'0-6':['res','MOM','Elternabend-Probe'],'1-2':['sp','29c Musik'],'1-3':['sp','29c Musik'],'2-1':['sp','30a Chor'],'2-6':['res','FRC','Chorprobe'],'2-7':['res','FRC','Chorprobe'],'3-0':['sp','Sporttag'],'3-1':['sp','Sporttag'],'3-2':['sp','Sporttag'],'3-3':['sp','Sporttag'],'3-4':['sp','Sporttag'],'3-5':['sp','Sporttag'],'3-6':['sp','Sporttag'],'3-7':['sp','Sporttag'],'3-8':['sp','Sporttag'],'4-3':['res','ARH','Vortrag Zeitzeugin 29a']},
+  'Labor Chemie':{'0-0':['sp','28b Chemie'],'0-1':['sp','28b Chemie'],'0-3':['sp','29a Chemie'],'0-4':['sp','29a Chemie'],'1-1':['sp','30d Chemie'],'1-6':['sp','27a SF BC'],'1-7':['sp','27a SF BC'],'2-0':['sp','29b Chemie'],'2-1':['sp','29b Chemie'],'2-4':['res','TAS','Farbversuche BG'],'3-2':['sp','28a Chemie'],'3-3':['sp','28a Chemie'],'4-0':['sp','30b Chemie'],'4-1':['sp','30b Chemie'],'4-6':['res','WAM','Praktikum MA']},
+  'Zimmer 12':{'0-1':['sp','30a Geografie'],'0-2':['sp','30a Geografie'],'0-7':['sp','29d Geschichte'],'1-0':['sp','28c Deutsch'],'1-1':['sp','28c Deutsch'],'1-4':['sp','30e Französisch'],'2-2':['sp','29a Geschichte'],'2-3':['sp','29a Geschichte'],'2-8':['res','DEJ','Personalkommission'],'2-9':['res','DEJ','Personalkommission'],'3-1':['sp','27b Philosophie'],'3-5':['sp','30c Englisch'],'4-2':['sp','28d Mathematik'],'4-3':['sp','28d Mathematik']},
+  'Informatik 1':{'0-0':['sp','30b Informatik'],'0-1':['sp','30b Informatik'],'0-6':['sp','29a Informatik'],'0-7':['sp','29a Informatik'],'1-2':['sp','30d Informatik'],'1-3':['sp','30d Informatik'],'2-0':['sp','29c Informatik'],'2-1':['sp','29c Informatik'],'2-6':['res','FEP','AG KI Werkstatt'],'3-3':['sp','30a Informatik'],'3-4':['sp','30a Informatik'],'4-1':['sp','29b Informatik'],'4-2':['sp','29b Informatik'],'4-7':['res','FEA','Kartierung 29a']},
+  'Musikzimmer':{'0-3':['sp','30c Musik'],'0-4':['sp','30c Musik'],'1-0':['sp','29d Musik'],'1-7':['res','FRC','Band'],'1-8':['res','FRC','Band'],'2-3':['sp','28a Musik'],'3-6':['sp','30e Musik'],'4-0':['sp','29a Musik'],'4-1':['sp','29a Musik']},
+  'Gruppenraum Mediothek':{'0-2':['res','LIA','Leseförderung'],'1-5':['res','ARH','Interviews 29a'],'2-2':['res','KEE','Beratung'],'2-3':['res','KEE','Beratung'],'3-7':['res','WAM','MA-Besprechung'],'4-4':['res','LIA','Leseförderung']},
+};
+let ROOM_SEL='Aula', BOOKED={}, ROOM_VIEW='rooms';
+// Individuelles Lernen: welche Lehrperson wann in welchem Raum erreichbar ist [Tag][Lektion]
+const IL = {'0-1':['WAM','G-01'],'0-3':['FRC','G-01'],'0-5':['ARH','G-01'],'0-7':['TAS','G-01'],'1-0':['FEA','G-01'],'1-2':['LIA','G-01'],'1-4':['DEJ','G-01'],'1-6':['FEP','C-01'],'1-8':['WAM','G-01'],'2-1':['ARH','G-01'],'2-3':['FEA','G-01'],'2-5':['KEG','G-01'],'2-6':['LIA','G-01'],'3-0':['TAS','G-01'],'3-2':['FEP','C-01'],'3-4':['FRC','G-01'],'3-7':['DEJ','G-01'],'4-1':['KEG','G-01'],'4-3':['WAM','G-01'],'4-5':['ARH','G-01'],'4-6':['FEA','G-01']};
+
+const TEAMS = {
+  kollegium:{name:'Kollegium Gymnasium Hofwil', logo:'H', groups:[
+    {g:'Hauptkanäle', ch:['Allgemein','Konferenzen']},
+    {g:'Projektkanäle WEGHO', closed:true, ch:['00 Projektgruppe WEGHO','01 Überfachliche Kompetenzen','02 BfKA','03 Wissenschaftspropädeutik','04 Digitalität','05 Interdisziplinarität','06 Bildung für nachhaltige Entwicklung','07 Politische Bildung','AG Künstliche Intelligenz']},
+  ]},
+  k29a:{name:'Klasse 29a', logo:'K', groups:[{g:'Hauptkanäle', ch:['Allgemein','Geografie','Geschichte','Informatik']}]},
+};
+const TABS = {
+  'kollegium|Allgemein':['Beiträge','Start','Termine','Räume','Formulare','Zuständigkeiten'],
+  'kollegium|Konferenzen':['Beiträge','Traktanden'],
+  'k29a|Allgemein':['Beiträge','Prüfungsplan','Class Notebook'],
+};
+
+/* ---------- Szenarien ---------- */
+const SCEN = [
+  {q:'Wann ist die nächste Konferenz und wie kommt sie in meinen Kalender?',
+   go:{team:'kollegium',ch:'Allgemein',tab:'Termine'}, hl:'#ev-0914',
+   old:['Google-Kollegiumskalender öffnen (abonnierbar, Änderungen kommen an)','Daneben gelten sieben PDF auf der Website: Jahreskalender, TaF-Kalender, Legende mit 30 Abkürzungen, Semesterplan, IW-Plan, LernBar-Plan, Studienberatungs-Plan','Was in einem PDF ändert, kommt per Mail nach','Für Rückfragen in ein anderes Programm wechseln (Mail, Chat)'],
+   neu:['Tab «Termine», im selben Fenster wie Beiträge, Formulare und Chat','Eine Terminquelle mit Kategorien statt Kalender plus sieben PDF plus Mail'],
+   hint:'Fairerweise: Der Google-Kalender kann das meiste davon auch. Der Gewinn liegt darin, dass alles unter einem Dach liegt und die zweite Schiene (PDF und Mail) wegfällt.'},
+  {q:'Wer ist zuständig für den Nachteilsausgleich?',
+   go:{team:'kollegium',ch:'Allgemein',tab:'Zuständigkeiten',search:'Nachteils'}, hl:'#zust-0',
+   old:['Website «Menschen»: nur Namen, keine Funktionen','Im Lehrerzimmer herumfragen oder eine Mail schicken; die Antwort kommt vielleicht erst am nächsten Tag'],
+   neu:['Tab «Zuständigkeiten», «Nachteils» eintippen: Name, Stellvertretung, Chat-Knopf'],
+   hint:'Nachteilsausgleich ist nur ein Beispiel. Es geht darum, für irgendeine Frage die zuständige Person zu finden, ohne herumzufragen.'},
+  {q:'Was hat die Schulleitung diese Woche mitgeteilt?',
+   go:{team:'kollegium',ch:'Allgemein',tab:'Start'}, hl:'#news',
+   old:['Posteingang nach Absender «Schulleitung» filtern','Zwischen Infoschreiben, Antworten und Weiterleitungen das aktuelle finden','Anhang öffnen'],
+   neu:['Tab «Start»: die aktuellen Mitteilungen stehen auf der Startseite, Kanal «Allgemein» zeigt die Ankündigung']},
+  {q:'Ist die Aula am Mi 16.9. in der 4. Lektion frei? Und wie reserviere ich sie?',
+   go:{team:'kollegium',ch:'Allgemein',tab:'Räume',room:'Aula'}, hl:'#rc-2-3',
+   old:['Raumbelegung als PDF öffnen: zeigt nur den Stundenplan, keine Reservationen','Im Sekretariat nachfragen, ob schon jemand reserviert hat','Reservation dort eintragen lassen und Bestätigung abwarten'],
+   neu:['Tab «Räume», Aula, Mittwoch: die 4. Lektion ist frei','Anklicken: Reservation steht im Raumkalender und im eigenen Kalender'],
+   hint:'Räume als Kalender-Ressourcen sind Standard in M365. Einmal von der IT eingerichtet, danach ohne Betreuung; Doppelbuchungen lehnt der Raum selbst ab.'},
+  {q:'Ich brauche das aktuelle Exkursionsgesuch.', sub:'Stufe 1: Ordnung',
+   go:{team:'kollegium',ch:'Allgemein',tab:'Formulare',filter:'Exkursionen und Intensivwochen'}, hl:'#form-0',
+   old:['Intranet öffnen, einloggen','Stichwortverzeichnis: heisst es «Formular», «Gesuch», «Auftrag» oder «Exkursion»?','Volltextsuche, Treffer durchsehen','Version und Datum aus dem Dateinamen ableiten'],
+   neu:['Tab «Formulare», Filter «Exkursionen»','Gültige Version öffnen: «Gültig ab» und Verantwortliche stehen daneben']},
+  {q:'Exkursionsgesuch: und wenn man es gleich online einreichen könnte?', sub:'Stufe 2: ein möglicher weiterer Schritt',
+   go:{team:'kollegium',ch:'Allgemein',tab:'Formulare',forms:true}, hl:'#formsbox',
+   old:['Lehrperson: Word-Vorlage öffnen, ausfüllen, speichern, per Mail ans Sekretariat','Sekretariat: Mail öffnen, Anhang ablegen, Angaben in die Übersichtsliste abtippen','Sekretariat: an die Schulleitung weiterleiten, Entscheid abwarten, Rückmeldung mailen','Alle: Stand des Gesuchs nur auf Nachfrage bekannt'],
+   neu:['Lehrperson: Formular ausfüllen, senden (zwei Minuten)','Sekretariat: der Antrag steht als Zeile in der Tabelle, nichts abtippen','Schulleitung: Status in derselben Tabelle setzen, Rückmeldung automatisch'],
+   hint:'Das ist kein Muss und keine Bedingung. Es zeigt nur, dass ein Formular (Microsoft Forms) direkt in eine Tabelle schreiben kann, die Sekretariat und Schulleitung teilen. Vor allem für das Sekretariat fällt damit das Abtippen und Weiterleiten weg.'},
+  {q:'Kann ich am Do 24.9. in der 29a eine Prüfung ansetzen?',
+   go:{team:'k29a',ch:'Allgemein',tab:'Prüfungsplan'}, hl:'#wk-39',
+   old:['Belastungsplan der 29a öffnen (separates Dokument, pro Klasse eines)','Woche suchen, Einträge von Hand zählen','Prüfung eintragen','Der Plan hängt mit nichts zusammen: kein Kalender, keine Benachrichtigung'],
+   neu:['Klassenteam 29a, Tab «Prüfungsplan»: KW 39 zeigt bereits zwei Prüfungen','Eintragen: erscheint im Klassenkalender und bei allen Beteiligten'],
+   hint:'Der Unterschied: Wochenansicht mit Anzahl, direkt im Klassenteam, verbunden mit dem Klassenkalender.'},
+  {q:'LernBar-Module: Wann, für wen, und wie melde ich eine Schülerin an?',
+   go:{team:'kollegium',ch:'Allgemein',tab:'Beiträge'}, hl:'#lernbar',
+   old:['LernBar-Terminplan als PDF auf der Website öffnen','Dort steht «Infos im Intranet»: Intranet öffnen, einloggen, suchen','Dort steht «Zuteilung gemäss Belastungsplan»: Belastungsplan der Klasse öffnen','Dort steht eine Mailadresse: Mail schreiben, auf Antwort warten'],
+   neu:['Ein Beitrag im Kanal «Allgemein»: Infoblatt, Prüfungsplan der Klasse und Chat mit der zuständigen Person sind darin verlinkt'],
+   hint:'Vier Dokumente und drei Programme werden zu einem Beitrag mit drei Links. Der Inhalt ist derselbe, nur die Wege dazwischen fallen weg.'},
+  {q:'Wer ist am Donnerstag in der 3. Lektion für individuelles Lernen da?',
+   go:{team:'kollegium',ch:'Allgemein',tab:'Räume',rv:'il'}, hl:'#il-3-2',
+   old:['IL-Plan als PDF auf der Website öffnen (eine Seite, Kürzel und Raumnummern eng gesetzt)','Kürzel in der Kürzelliste nachschlagen','Lehrperson per Mail oder im Lehrerzimmer suchen'],
+   neu:['Tab «Räume», Ansicht «Individuelles Lernen»: Kürzel anklicken, Chat geht auf'],
+   hint:'Der IL-Plan ist inhaltlich ein Raumkalender (Lehrperson, Raum, Lektion). Er wird nicht neu erfasst, sondern nur anders angezeigt.'}
+];
+
+/* ---------- Zustand ---------- */
+const fresh=()=>({team:'kollegium', ch:'Allgemein', tab:'Beiträge', filter:null, search:'', scen:null, forms:false, sent:false});
+let S=fresh();
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const initials = n=>n.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+const link=(cls,ab,txt)=>`<span class="lc"><span class="i ${cls}">${ab}</span>${txt}</span>`;
+
+/* ---------- Rendering ---------- */
+function renderPanel(){
+  const p=$('#panel');
+  if(S.team==='alle'){
+    p.innerHTML=`<div class="back"><b style="padding:4px 6px">Teams</b></div><div class="grp"><div class="gh">Ihre Teams</div>
+      ${Object.entries(TEAMS).map(([id,t])=>`<div class="teamlink" data-team="${id}"><div class="tl">${t.logo}</div>${t.name}</div>`).join('')}</div>`;
+    p.querySelectorAll('[data-team]').forEach(el=>el.onclick=()=>{S.team=el.dataset.team;S.ch='Allgemein';S.tab='Beiträge';render();});
+    return;
+  }
+  const t=TEAMS[S.team];
+  const other=S.team==='kollegium'?'k29a':'kollegium';
+  p.innerHTML=`<div class="back"><button id="allteams">‹ Alle Teams</button></div>
+    <div class="teamhead"><div class="tlogo">${t.logo}</div><div class="tname"><span>${t.name}</span><span style="color:var(--txt3)">···</span></div></div>
+    ${t.groups.map(g=>`<div class="grp ${g.closed?'closed':''}"><div class="gh"><span class="tri"></span>${g.g}</div>
+      ${g.ch.map(c=>`<div class="ch ${c===S.ch?'active':''}" data-ch="${esc(c)}">${c}${c==='Konferenzen'||c==='Geografie'?'<span class="dot"></span>':''}</div>`).join('')}</div>`).join('')}
+    <div class="grp"><div class="gh"><span class="tri" style="transform:rotate(-90deg)"></span>Ausgeblendete Kanäle</div></div>
+    <div class="grp"><div class="gh">Weitere Teams</div><div class="teamlink" data-team="${other}"><div class="tl">${TEAMS[other].logo}</div>${TEAMS[other].name}</div></div>`;
+  $('#allteams').onclick=()=>{S.team='alle';render();};
+  p.querySelectorAll('.ch').forEach(el=>el.onclick=()=>{S.ch=el.dataset.ch;S.tab='Beiträge';S.filter=null;S.search='';render();});
+  p.querySelectorAll('.gh').forEach(el=>el.onclick=()=>el.parentElement.classList.toggle('closed'));
+  p.querySelectorAll('[data-team]').forEach(el=>el.onclick=()=>{S.team=el.dataset.team;S.ch='Allgemein';S.tab='Beiträge';render();});
+}
+
+function renderHead(){
+  const h=$('#chanhead');
+  if(S.team==='alle'){h.innerHTML='';h.style.display='none';return;}
+  h.style.display='flex';
+  const tabs=TABS[S.team+'|'+S.ch]||['Beiträge','Dateien'];
+  h.innerHTML=`<span class="cicon">${S.ch==='Allgemein'?'H':'#'}</span><span class="cname">${esc(S.ch)}</span>
+    <div id="tabs">${tabs.map(t=>`<button class="tab ${t===S.tab?'active':''}" data-tab="${esc(t)}">${t}</button>`).join('')}<button class="tab plus">+</button></div>
+    <div class="actions"><span class="meet">▢ Jetzt besprechen ▾</span><span>⌕</span><span>⊞</span><span>···</span></div>`;
+  h.querySelectorAll('.tab[data-tab]').forEach(el=>el.onclick=()=>{S.tab=el.dataset.tab;render();});
+}
+
+function renderContent(){
+  const c=$('#content');
+  if(S.team==='alle'){c.innerHTML=viewAllTeams();c.querySelectorAll('.tcard[data-team]').forEach(el=>el.onclick=()=>{S.team=el.dataset.team;S.ch='Allgemein';S.tab='Beiträge';render();});return;}
+  const v={'Beiträge':viewPosts,'Start':viewStart,'Termine':viewCal,'Formulare':viewForms,'Zuständigkeiten':viewZust,'Prüfungsplan':viewPruef,'Räume':()=>ROOM_VIEW==='il'?viewIL():viewRooms(),'Traktanden':viewTrakt}[S.tab];
+  c.scrollTop=0;c.innerHTML=v?v():`<div class="list"><div class="note">Tab «${esc(S.tab)}» ist im Demonstrator nur angedeutet.</div></div>`;
+  bindContent();
+}
+
+// Beitrag mit optionalen Antworten
+const post=(o)=>`<div class="post ${o.cls||''}"><div class="ph"><div class="avatar ${o.avcls||''}">${o.av}</div><div class="meta"><b>${o.name}</b>${o.pill?`<span class="pill owner">${o.pill}</span>`:''}<span class="when">${o.when}</span></div></div><div class="pb">${o.body}</div>${o.foot?`<div class="pr">${o.foot}</div>`:''}${(o.replies||[]).map(r=>`<div class="reply"><div class="avatar s ${r.st?'st':''}">${r.av}</div><div><b>${r.name}</b> <span class="who">${r.when}</span><br>${r.txt}</div></div>`).join('')}</div>`;
+const compose=`<div class="compose"><button>✎ In Kanal posten</button></div>`;
+
+function viewPosts(){
+  if(S.team==='k29a'){
+    if(S.ch==='Geografie') return `<div class="posts">${post({av:'AF',name:'Adolphe Ferrière',when:'Montag 10:20',
+      body:`<h4>Projekt: Hitzeinseln auf dem Schulareal</h4>Bis zur Intensivwoche messen wir an 12 Standorten die Temperatur. Bildet Dreiergruppen und legt für eure Gruppe ein Tag an (z.B. <span class="mn g">@Gruppe Parkplatz</span>), dann könnt ihr euch gezielt anschreiben. Jede Gruppe trägt ihre Werte in die gemeinsame Tabelle ein, die Karte aktualisiert sich daraus.<br>${link('xl','X','Messwerte_29a.xlsx (gemeinsam bearbeitbar)')}${link('spl','S','Anleitung Messung')}${link('zu','Z','Zuweisung: Messreihe bis 18.9.')}<div class="map"><svg viewBox="0 0 560 200" role="img" aria-label="Skizze Schulareal mit Messpunkten"><rect width="560" height="200" fill="#e8f0e3"/><rect x="40" y="30" width="200" height="90" fill="#cfcfcf"/><text x="140" y="80" font-size="12" text-anchor="middle" fill="#555">Hauptgebäude</text><rect x="270" y="30" width="120" height="60" fill="#d9d9d9"/><text x="330" y="65" font-size="11" text-anchor="middle" fill="#555">Parkplatz</text><rect x="410" y="20" width="120" height="160" fill="#c9dfb8"/><text x="470" y="105" font-size="11" text-anchor="middle" fill="#4a6b35">Park</text><rect x="40" y="135" width="330" height="50" fill="#e3c9a8"/><text x="205" y="164" font-size="11" text-anchor="middle" fill="#6b4f2e">Sportplatz</text><g font-size="9" text-anchor="middle" fill="#fff"><circle cx="370" cy="45" r="13" fill="#c50f1f" opacity=".85"/><text x="370" y="48">34°</text><circle cx="120" cy="160" r="13" fill="#e0641c" opacity=".85"/><text x="120" y="163">31°</text><circle cx="300" cy="160" r="13" fill="#e0641c" opacity=".85"/><text x="300" y="163">30°</text><circle cx="470" cy="60" r="13" fill="#2f8f4e" opacity=".85"/><text x="470" y="63">24°</text><circle cx="470" cy="150" r="13" fill="#2f8f4e" opacity=".85"/><text x="470" y="153">23°</text><circle cx="215" cy="48" r="13" fill="#e8a317" opacity=".85"/><text x="215" y="51">27°</text></g></svg><div class="cap">Karte aus Messwerte_29a.xlsx, aktualisiert sich mit jedem Eintrag · Stand Di 07:40</div></div>`,
+      foot:'👍 14 &nbsp; ↩ 4 Antworten',
+      replies:[{av:'MO',name:'Meret Oppenheim',when:'Montag 12:41',st:true,txt:'<span class="mn g">@Gruppe Parkplatz</span> Können wir auch am Abend messen? Dann sieht man den Unterschied zum Park vermutlich besser. Abstimmung: <span class="tag">Di 18:00 · 2</span> <span class="tag">Mi 18:00 · 1</span>'},
+               {av:'AF',name:'Adolphe Ferrière',when:'Montag 13:05',txt:'Gute Idee. Tragt die Abendwerte in der Spalte «Zeitpunkt» ein, dann vergleichen wir Tag und Abend auf der Karte.'},
+               {av:'PK',name:'Paul Klee',when:'Dienstag 07:55',st:true,txt:'<span class="mn">@Adolphe Ferrière</span> Unsere Werte sind drin, der Parkplatz ist jetzt rot. Stimmt das mit 34 Grad?'},
+               {av:'JI',name:'Johannes Itten',when:'Dienstag 08:10',st:true,txt:'Ja, wir hatten das Thermometer auf dem Asphalt. <span class="mn g">@Gruppe Park</span> könnt ihr zur gleichen Zeit messen, damit wir vergleichen können? <span class="ee">(Cool, dass nur ihr die Glocke kriegt und trotzdem alle mitlesen.)</span>'}]})}${compose}</div>`;
+    if(S.ch==='Geschichte') return `<div class="posts">${post({av:'HA',name:'Hannah Arendt',when:'Freitag 15:10',
+      body:`<h4>Oral History: Jugend in Bern um 1968</h4>Ihr führt je ein Interview mit einer Person, die damals jung war. Zum Einstieg ein Ausschnitt aus einem Zeitzeugengespräch (7 Min.). Leitfaden, Einverständniserklärung und Aufnahmeprotokoll liegen unten; die Transkripte sammeln wir im Klassennotizbuch.<div class="vid"><div class="th">▶</div><div class="tx"><b>Zeitzeugengespräch: «Wir wollten einfach mitreden»</b>Ausschnitt, 7:12 · Stream<br><small>Wird direkt im Beitrag abgespielt</small></div></div>${link('wd','W','Interviewleitfaden.docx')}${link('on','N','Klassennotizbuch › Transkripte')}${link('zu','Z','Zuweisung: Interview bis 2.10.')}`,
+      foot:'👍 9 &nbsp; ↩ 3 Antworten',
+      replies:[{av:'KK',name:'Käthe Kollwitz',when:'Freitag 18:30',st:true,txt:'Darf die Person auch aus einer anderen Stadt sein? Meine Grossmutter war 1968 in Zürich.'},
+               {av:'HA',name:'Hannah Arendt',when:'Samstag 09:12',txt:'Ja, unbedingt. Vermerkt den Ort im Protokoll, dann können wir Bern und Zürich vergleichen.'},
+               {av:'LM',name:'Loris Malaguzzi',when:'Sonntag 20:15',st:true,txt:'<span class="mn">@Käthe Kollwitz</span> Ich habe die Fragen fürs Interview im Notizbuch angefangen, ergänz einfach direkt drin. <span class="ee">Kein Hin- und Herschicken mehr, wir schreiben am selben Text.</span>'}]})}${compose}</div>`;
+    if(S.ch==='Informatik') return `<div class="posts">${post({av:'PF',name:'Philipp Emanuel von Fellenberg',when:'Gestern 11:30',
+      body:`<h4>Experiment: Wem gehorcht ein Sprachmodell?</h4>Ihr testet in Zweiergruppen drei vorbereitete Szenarien im KI-Tool der Klasse (ohne Anmeldung). Notiert, wo das Modell nachgibt, wo es sich weigert, und was ihr davon haltet. Die Aufgabenverteilung führen wir hier im Beitrag, alle können sie bearbeiten.<div class="loop"><div class="lh"><span>Aufgabenverteilung (Loop-Komponente, gemeinsam bearbeitbar)</span><span>zuletzt: Jean Piaget, vor 3 Min.</span></div><ul><li><span class="cb on">✓</span>Szenario 1 «Hausaufgabe schreiben» · <span class="mn">@Jean Piaget</span>, <span class="mn">@Emmi Pikler</span></li><li><span class="cb on">✓</span>Szenario 2 «Persönliche Daten» · <span class="mn">@Ovide Decroly</span>, <span class="mn">@Sophie Scholl</span></li><li><span class="cb"></span>Szenario 3 «Umformulieren, bis es klappt» · noch frei</li><li><span class="cb"></span>Auswertung vorbereiten (Donnerstag) · <span class="mn">@Jean Piaget</span></li></ul></div>${link('spl','S','KI-Szenario-Tool')}${link('on','N','Klassennotizbuch › Beobachtungen')}${link('zu','Z','Zuweisung: Protokoll bis Do')}`,
+      foot:'👍 11 &nbsp; ↩ 2 Antworten',
+      replies:[{av:'JP',name:'Jean Piaget',when:'Gestern 16:02',st:true,txt:'Bei Szenario 2 hat das Modell zuerst nein gesagt und nach Umformulieren doch geantwortet. Zählt das als Nachgeben? <span class="mn">@Ovide Decroly</span> hattet ihr das auch?'},
+               {av:'PF',name:'Philipp Emanuel von Fellenberg',when:'Gestern 16:40',txt:'Genau das ist die interessante Beobachtung. Schreibt beide Formulierungen ins Protokoll, das diskutieren wir am Donnerstag.'}]})}${compose}</div>`;
+    return `<div class="posts">
+      ${post({av:'HA',name:'Hannah Arendt',when:'Gestern 17:40',body:'Liebe 29a, die Deutschprüfung vom Dienstag ist im Prüfungsplan eingetragen. Bitte schaut dort, nicht in alten Chats.',foot:'↩ 1 Antwort',replies:[{av:'MO',name:'Meret Oppenheim',when:'Gestern 18:02',st:true,txt:'Steht schon in meinem Kalender, danke. <span class="ee">Ein Ort für alles, das ist so viel entspannter.</span>'}]})}
+      ${post({av:'MM',name:'Maria Montessori',when:'Montag 08:05',body:'Erinnerung: Elternabend am 22.9., 19:00, Aula. Die Einladung ist per Post unterwegs.',foot:'👍 6'})}
+      ${compose}</div>`;
+  }
+  if(S.ch==='Konferenzen') return `<div class="posts">
+    ${post({av:'JP',name:'Johann Heinrich Pestalozzi',pill:'Besitzer',when:'Montag 08:10',body:`<h4>Gesamtkonferenz vom 3. November, 16:15, Aula</h4>Traktanden im Tab «Traktanden». Meinungsbild zu Traktandum 3 bitte bis Freitag in der Umfrage.<div class="poll"><b>Umfrage (Forms):</b> Soll die Klassenstunde künftig auf den Donnerstag verlegt werden? &nbsp; <span class="tag">Ja 12</span> <span class="tag">Nein 8</span> <span class="tag">Enthaltung 4</span></div>`,foot:'↩ 4 Antworten'})}
+    ${post({av:'HP',name:'Helen Parkhurst',pill:'Sekretariat',when:'Freitag 10:05',body:'Das Protokoll der Konferenz vom 26. August ist im Ordner «Protokolle» abgelegt.',foot:'👍 7'})}
+    ${compose}</div>`;
+  if(S.ch!=='Allgemein') return `<div class="posts">${post({av:'ST',name:'Sophie Taeuber-Arp',when:'Freitag 14:20',body:'Beiträge in diesem Kanal sind im Demonstrator nur angedeutet.'})}${compose}</div>`;
+  return `<div class="posts">
+    <div class="post ann" id="ann"><div class="banner">Mitteilung der Schulleitung, Woche 37</div><div class="sub">ANKÜNDIGUNG · Johann Heinrich Pestalozzi · Montag 07:30 · nur Besitzer können in diesem Kanal posten</div>
+      <div class="pb"><b>Gesamtkonferenz</b> heute 16:15 in der Aula. <b>Exkursionsgesuche</b> 2. Semester bis 24.9. über das Formular im Tab «Formulare». <b>Intensivwoche 1</b> ab 21.9., Einsatzplan folgt. Alles Weitere auf der <a href="#" data-goto="Start">Startseite</a>.</div>
+      <div class="pr">👍 23 &nbsp; ↩ 2 Antworten</div></div>
+    <div id="lernbar">${post({av:'GK',name:'Georg Kerschensteiner',pill:'LernBar-Team',when:'Dienstag 09:40',
+      body:`<h4>LernBar-Module im November</h4>Am Fr 27.11., 15:35 bis 17:10 im Pavillon, laufen die freiwilligen Module Stützstrategien, Lernstrategien und Prüfungen, für alle Stufen. «Besser lernen» für GYM1 am Mo 16.11., die Termine pro Klasse stehen im jeweiligen Prüfungsplan. Individuelle Termine: schreibt mir direkt.<br>${link('spl','S','Infoblatt LernBar (Tab Formulare)')}${link('zu','Z','Prüfungsplan 29a: 16.11. eingetragen')}<span class="lc" style="cursor:pointer"><span class="i zu">💬</span>Chat mit <span class="mn">@Georg Kerschensteiner</span></span>`,
+      foot:'👍 8 &nbsp; ↩ 1 Antwort',
+      replies:[{av:'HA',name:'Hannah Arendt',when:'Dienstag 10:12',txt:'Merci. Die 29a hat den Termin, ich habe ihn im Klassenteam gesehen, bevor du ihn hier gepostet hast.'}]})}</div>
+    ${post({av:'CF',name:'Célestin Freinet',when:'Mittwoch 16:55',body:'<h4>Spesenformular</h4>Wo finde ich das aktuelle Spesenformular? Ich habe zwei Versionen auf dem Laptop.',
+      replies:[{av:'HP',name:'Helen Parkhurst',when:'Mittwoch 17:10',txt:'Im Tab <a href="#" data-goto="Formulare">Formulare</a> unter «Finanzen». Dort liegt immer nur die gültige Version.'},{av:'CF',name:'Célestin Freinet',when:'Mittwoch 17:14',txt:'Gefunden, zwei Klicks. <span class="ee">Das fühlt sich zum ersten Mal wie ein Arbeitsplatz an und nicht wie eine Schatzsuche.</span>'}]})}
+    ${post({av:'HP',name:'Helen Parkhurst',pill:'Sekretariat',when:'Freitag 10:05',body:'Die Kürzelliste 26/27 ist aktualisiert (Link auf der Startseite). Bitte keine Kopien weiterleiten, sonst kursieren alte Versionen.',foot:'👍 11'})}
+    <div class="compose"><button class="dis">✎ In Kanal posten (moderiert: nur Schulleitung und Sekretariat, Antworten offen)</button></div>
+  </div>`;
+}
+
+function viewStart(){
+  const week=EVENTS.filter(e=>e.d>='2026-09-07'&&e.d<='2026-09-13').sort((a,b)=>a.d<b.d?-1:1);
+  const up=EVENTS.filter(e=>e.d>'2026-09-13').sort((a,b)=>a.d<b.d?-1:1).slice(0,3);
+  const tile=(ic,col,b,s)=>`<a href="#"><span class="ic" style="background:${col}">${ic}</span><b>${b}</b><small>${s}</small></a>`;
+  const ev=e=>{const m=['','Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'][+e.d.slice(5,7)];return `<div class="ev"><div class="d"><b>${+e.d.slice(8)}</b><span>${m}</span></div><div class="t"><b><span class="cat" style="background:${CATCOL[e.c]}"></span>${e.t}</b><span>${e.time||''}</span></div></div>`};
+  return `<div class="sp">
+    <div class="hero"><div><h1>Kollegium Hofwil</h1><div class="sub">Startseite Kollegium · Dienstag, 8. September 2026</div></div><span class="edit">✎ Bearbeiten (Sekretariat)</span></div>
+    <div class="grid">
+      <div style="display:grid;gap:18px">
+        <div class="wp" id="ql"><h3>Schnellzugriff <small>Links auf die eine gültige Quelle</small></h3><div class="ql">
+          ${tile('▦','#5b5fc7','Stundenpläne','alle Klassen')}
+          ${tile('⌂','#0f7b0f','Räume','frei, belegt, buchen')}
+          ${tile('Aa','#8a8a8a','Kürzelliste','26/27')}
+          ${tile('♨','#7a7a7a','Menüplan','Mensa, diese Woche')}
+          ${tile('E','#185abd','Evento','Absenzen, Noten')}
+        </div></div>
+        <div class="wp" id="news"><h3>Mitteilungen der Schulleitung <small>wöchentlich</small></h3>
+          <div class="news"><div class="thumb"></div><div><b>Woche 37: Gesamtkonferenz, Exkursionsgesuche, Intensivwoche 1</b><p>Gesamtkonferenz heute 16:15. Exkursionsgesuche 2. Semester bis 24.9. Einsatzplan IW1 folgt.</p><small>Johann Heinrich Pestalozzi · Montag 07:30</small></div></div>
+          <div class="news"><div class="thumb g"></div><div><b>Rückmeldung aus der Schülerbefragung</b><p>Die Kurzfassung liegt im Kanal Konferenzen. Diskussion an der Gesamtkonferenz, Traktandum 2.</p><small>Maria Montessori · 1. September</small></div></div>
+          <div class="news"><div class="thumb o"></div><div><b>Neu: Formulare und Zuständigkeiten hier im Team</b><p>Alles Interne findet sich ab sofort in den Tabs dieses Kanals.</p><small>Janusz Korczak · 28. August</small></div></div>
+        </div>
+      </div>
+      <div style="display:grid;gap:18px;align-content:start">
+        <div class="wp" id="week"><h3>Diese Woche <small>aus dem Tab «Termine»</small></h3>${week.map(ev).join('')}<div style="font-size:11px;color:var(--txt3);margin-top:8px">Demnächst</div>${up.map(ev).join('')}</div>
+        <div class="wp"><h3>Kontakt</h3>
+          ${SEK.map(p=>`<div class="contact"><div class="avatar s">${initials(p.n)}</div><div><b>${p.n}</b><span>${p.r}</span></div><span class="chat">💬 Chat</span></div>`).join('')}
+          ${SL.map(p=>`<div class="contact"><div class="avatar s" style="background:#4f52b2">${p.k}</div><div><b>${p.n}</b><span>${p.r}</span></div><span class="chat">💬 Chat</span></div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="owner">Verantwortlich: Sekretariat (H. Parkhurst) · zuletzt bearbeitet: heute 07:45</div>
+  </div>`;
+}
+
+function viewCal(){
+  const days=[];let d=new Date(2026,7,31);
+  for(let w=0;w<5;w++){for(let i=0;i<5;i++){days.push(new Date(d));d.setDate(d.getDate()+1);}d.setDate(d.getDate()+2);}
+  const iso=x=>x.toISOString().slice(0,10);
+  const cells=days.map(x=>{const k=iso(x);const evs=EVENTS.filter(e=>e.d===k);const other=x.getMonth()!==8;
+    const inIW=k>'2026-09-21'&&k<='2026-09-25';const inF=k>'2026-09-28';
+    return `<div class="dc ${k==='2026-09-08'?'today':''} ${other?'other':''}"><div class="dn">${x.getDate()}${x.getDate()===1?(x.getMonth()===8?'. Sept.':'. Okt.'):''}</div>${evs.map(e=>`<div class="cev c${e.c}" id="ev-${k.slice(5).replace('-','')}" title="${esc(e.t)}">${e.time&&e.time!=='ganztägig'?e.time.split(',')[0]+' ':''}${esc(e.t)}</div>`).join('')}${inIW?'<div class="cev c2">Intensivwoche 1</div>':''}${inF?'<div class="cev c4">Herbstferien</div>':''}</div>`}).join('');
+  return `<div class="cal">
+    <div class="head"><h2>Kollegiumskalender</h2><span class="b">‹</span><span class="b">Heute</span><span class="b">›</span><b style="font-size:15px">September 2026</b><span style="margin-left:auto;color:var(--txt2)">Arbeitswoche ▾ &nbsp; <span class="b">＋ Neuer Termin</span> &nbsp; <span class="b">Im eigenen Kalender abonniert ✓</span></span></div>
+    <div class="legend">${Object.entries(CATS).map(([k,v])=>`<span><span class="cat" style="background:${CATCOL[k]}"></span>${v}</span>`).join('')}<span style="margin-left:auto">Ersetzt Jahreskalender, TaF-Kalender, Legende, Semesterplan, IW-Plan, LernBar-Plan und Studienberatungs-Plan</span></div>
+    <div class="calgrid">${['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'].map(x=>`<div class="dh">${x}</div>`).join('')}${cells}</div>
+    <div class="note" style="margin-top:12px">Der Jahresplan als PDF bleibt für Eltern und Lernende auf der Website. Im Kollegium ist dieser Kalender die Arbeitsgrundlage: Er erscheint im eigenen Kalender neben dem Stundenplan, Änderungen kommen automatisch.</div>
+  </div>`;
+}
+
+function viewForms(){
+  const cats=[...new Set(FORMS.map(f=>f.cat))];
+  const rows=cats.filter(c=>!S.filter||c===S.filter).map(c=>`<tr class="grp"><td colspan="6">▾ ${c} (${FORMS.filter(f=>f.cat===c).length})</td></tr>`+
+    FORMS.map((f,i)=>({f,i})).filter(x=>x.f.cat===c).map(({f,i})=>`<tr id="form-${i}"><td><span class="fi"><span class="fico ${f.ty}">${f.ty.toUpperCase().slice(0,3)}</span>${esc(f.n)}.${f.ty}</span></td><td>${f.cat}</td><td>${f.own}</td><td>${f.ab}</td><td><span class="tag ${f.v==='gültig'?'ok':''}">${f.v}</span></td><td style="color:var(--txt3)">···</td></tr>`).join('')).join('');
+  return `<div class="list">
+    <div class="cmdbar"><span class="b primary">＋ Neu ▾</span><span class="b" id="formsbtn" style="border:1px solid var(--line2);background:#fff;color:var(--brand);font-weight:600">✎ Exkursionsgesuch online einreichen</span><span class="b">↑ Hochladen ▾</span><span class="b">↗ Teilen</span><span class="b">⇩ Herunterladen</span><span class="sp"></span><span class="b">Alle Dokumente ▾</span><span class="b">Filter</span></div>
+    <div class="chips2">${['Alle',...cats].map(c=>`<button class="fchip ${(c==='Alle'&&!S.filter)||c===S.filter?'on':''}" data-f="${esc(c)}">${c}</button>`).join('')}</div>
+    <div class="note">Nur leere Vorlagen und Merkblätter (nicht klassifiziert, datenschutzrechtlich unproblematisch).</div>
+    ${S.forms?viewFormsBox():''}
+    <table class="sl"><thead><tr><th>Name</th><th>Kategorie</th><th>Verantwortlich</th><th>Gültig ab</th><th>Schuljahr</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+  </div>`;
+}
+function viewFormsBox(){
+  const sent=S.sent;
+  return `<div id="formsbox" class="fbox"><div class="fcol"><div class="fhead"><span class="fico" style="background:#038387;width:22px;height:22px;font-size:9px">F</span><b>Exkursionsgesuch</b><small>Microsoft Forms · antwortet in die Tabelle des Sekretariats</small></div>
+    ${sent?`<div class="fok">✓ Gesuch gesendet. Es steht jetzt als Zeile 4 in der Tabelle rechts; die Schulleitung sieht es dort und setzt den Status. Sie erhalten die Rückmeldung als Chat-Nachricht.</div>`:`
+    <label>Klasse <select><option>29a</option><option>29b</option><option>30a</option></select></label>
+    <label>Datum <input value="Mi 21.10.2026"></label>
+    <label>Ziel <input value="Berner Altstadt, Stadtarchiv"></label>
+    <label>Fach, Bezug zum Unterricht <input value="Geschichte, Oral-History-Projekt"></label>
+    <label>Begleitperson <input value="DEJ"></label>
+    <label>Kosten pro Person <input value="CHF 12 (ÖV)"></label>
+    <button id="formsend" class="fsend">Senden</button>`}</div>
+    <div class="fcol"><div class="fhead"><span class="fico xlsx" style="width:22px;height:22px;font-size:9px">X</span><b>Exkursionsgesuche_26_27.xlsx</b><small>Sekretariat und Schulleitung, eine Zeile pro Gesuch</small></div>
+    <table class="sl xs"><thead><tr><th>#</th><th>Eingang</th><th>Klasse</th><th>Datum</th><th>Ziel</th><th>LP</th><th>Status</th></tr></thead><tbody>
+      <tr><td>1</td><td>28.8.</td><td>29c</td><td>26.8.</td><td>Stadtexkursion</td><td>FEA</td><td><span class="tag ok">bewilligt</span></td></tr>
+      <tr><td>2</td><td>2.9.</td><td>30b</td><td>24.9.</td><td>Museum für Kommunikation</td><td>ARH</td><td><span class="tag ok">bewilligt</span></td></tr>
+      <tr><td>3</td><td>7.9.</td><td>28a</td><td>5.11.</td><td>Kernkraftwerk Mühleberg</td><td>WAM</td><td><span class="tag">in Prüfung</span></td></tr>
+      ${sent?`<tr class="hlrow"><td>4</td><td>heute</td><td>29a</td><td>21.10.</td><td>Berner Altstadt, Stadtarchiv</td><td>DL</td><td><span class="tag">eingereicht</span></td></tr>`:''}
+    </tbody></table>
+    <div style="font-size:11.5px;color:var(--txt2);margin-top:8px;line-height:1.4">Für das Sekretariat: kein Anhang öffnen, nichts abtippen, keine Weiterleitung. Für die Schulleitung: alle offenen Gesuche in einer Ansicht, Status per Klick. Für die Lehrperson: Stand jederzeit sichtbar.</div></div></div>`;
+}
+
+function viewZust(){
+  const q=S.search.toLowerCase();
+  const re=q?new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','i'):null;
+  const mark=s=>re?esc(s).replace(re,'<span class="hl">$1</span>'):esc(s);
+  const rows=ZUST.map((z,i)=>({z,i})).filter(({z})=>!q||(z.f+' '+z.n+' '+z.k+' '+z.t.map(t=>t[1]).join(' ')).toLowerCase().includes(q))
+    .map(({z,i})=>`<tr id="zust-${i}"><td>${mark(z.f)}</td><td><span class="fi"><span class="avatar s">${initials(z.n)}</span>${mark(z.n)} <span class="tag">${z.k}</span></span></td><td>${z.t.map(t=>`<span class="tag ${t[0]}">${mark(t[1])}</span>`).join('')}</td><td>${z.s}</td><td><button class="chatbtn">💬 Chat</button></td></tr>`).join('');
+  return `<div class="list">
+    <div class="cmdbar"><span class="b primary">＋ Neu</span><span class="b">Bearbeiten in Rasteransicht</span><span class="b">⇩ Exportieren</span><span class="sp"></span><input id="zq" placeholder="Suchen (Funktion, Name, Fachschaft, AG)" value="${esc(S.search)}"><span class="b">Alle Elemente ▾</span></div>
+    <table class="sl"><thead><tr><th>Wer ist zuständig für …</th><th>Person</th><th>Fachschaft, Arbeitsgruppen</th><th>Stellvertretung</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="5" style="color:var(--txt3)">Kein Eintrag</td></tr>'}</tbody></table>
+  </div>`;
+}
+
+function viewPruef(){
+  return `<div class="list"><div class="cmdbar"><span class="b primary">＋ Prüfung eintragen</span><span class="b">Kalenderansicht</span><span class="b">Gruppiert nach Woche ▾</span><span class="sp"></span><span style="font-size:12px">Abmachung der Klasse: höchstens 2 Prüfungen pro Woche</span></div>
+    <div class="side2"><div class="weeks">${PRUEF.map(p=>{const n=p.ex.length;return `<div class="wk ${n>=2?'mid':'ok'}" id="wk-${p.w.replace('KW ','')}"><div class="wn">${p.w} <span style="color:var(--txt3);font-weight:400">(${p.note?'Ferien':n})</span><small>${p.r}</small></div><div class="ex">${p.note?`<span style="background:#f0f0f0">${p.note}</span>`:p.ex.map(e=>`<span>${e}</span>`).join('')||'<span style="border-style:dashed;color:var(--txt3)">frei</span>'}</div><div class="cnt">${p.note?'':n+' Prüfung'+(n===1?'':'en')}</div></div>`}).join('')}</div>
+    <div><div class="wp"><h3>Prüfungsplan 29a</h3><p style="font-size:12.5px;color:var(--txt2);margin:0;line-height:1.45">Liste im Klassenteam, gruppiert nach Woche mit Anzahl. Eintragen können alle Lehrpersonen der Klasse; die Klassenchefin sieht denselben Plan. Jeder Eintrag erscheint im Klassenkalender.</p></div></div></div></div>`;
+}
+
+function viewIL(){
+  const cell=(d,l)=>{const o=IL[d+'-'+l];return o?`<div class="rc il" id="il-${d}-${l}" title="${o[0]} für individuelles Lernen in ${o[1]}">${o[0]} · ${o[1]}</div>`:'<div class="rc none"></div>';};
+  return `<div class="rooms">
+    <div class="cmdbar"><span style="font-weight:600;font-size:15px">Individuelles Lernen (IL)</span><span class="b" style="border:1px solid var(--line2);background:#fff">Phase 1, 10.8. bis 30.10. ▾</span><span class="sp"></span>${viewSwitch()}</div>
+    <div class="legend"><span><span class="cat" style="background:#0e7490"></span>Lehrperson erreichbar, Raum</span><span style="margin-left:auto">Kürzel anklicken: Chat mit der Lehrperson · Ersetzt den IL-Plan als PDF</span></div>
+    <div class="rgrid"><div class="rh"></div>${['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'].map(d=>`<div class="rh">${d}</div>`).join('')}
+      ${LESSONS.map((t,l)=>`<div class="rt">${l+1}. <small>${t}</small></div>${[0,1,2,3,4].map(d=>`<div class="rd">${cell(d,l)}</div>`).join('')}`).join('')}</div>
+    <div class="note" style="margin-top:12px">Derselbe Kalender wie die Räume, nur nach Lehrperson statt nach Raum angezeigt. Wer eine IL-Lektion übernimmt, trägt sie einmal ein; der PDF-Plan entfällt.</div>
+  </div>`;
+}
+function viewSwitch(){return `<span style="font-size:12px;color:var(--txt2)">Ansicht:</span><button class="fchip ${ROOM_VIEW==='rooms'?'on':''}" data-rv="rooms">Räume</button><button class="fchip ${ROOM_VIEW==='il'?'on':''}" data-rv="il">Individuelles Lernen</button>`;}
+function viewRooms(){
+  const occ=OCC[ROOM_SEL]||{};
+  const cell=(d,l)=>{const k=d+'-'+l;const b=BOOKED[ROOM_SEL+'|'+k];const o=occ[k];
+    if(b)return `<div class="rc mine" id="rc-${k}" title="Ihre Reservation">DL · ${b}</div>`;
+    if(o)return `<div class="rc ${o[0]}" id="rc-${k}" title="${o[0]==='sp'?'Stundenplan':'Reservation '+o[1]+': '+o[2]}">${o[0]==='sp'?o[1]:o[1]+' · '+o[2]}</div>`;
+    return `<div class="rc free" id="rc-${k}" data-k="${k}" title="frei, klicken zum Buchen">frei</div>`;};
+  return `<div class="rooms">
+    <div class="cmdbar"><span style="font-weight:600;font-size:15px">Raumkalender</span><span class="b" style="border:1px solid var(--line2);background:#fff">Woche 38, 14. bis 18. Sept. ▾</span>${viewSwitch()}<span class="sp"></span>
+      <span style="font-size:12px;color:var(--txt2)">Raum:</span><select id="roomsel" style="font:inherit;padding:5px 8px;border:1px solid var(--line2);border-radius:4px;background:#fff">${ROOMS.map(r=>`<option ${r===ROOM_SEL?'selected':''}>${r}</option>`).join('')}</select></div>
+    <div class="legend"><span><span class="cat" style="background:#bdbdbd"></span>Stundenplan</span><span><span class="cat" style="background:#5b5fc7"></span>Reservation (Kürzel)</span><span><span class="cat" style="background:#0f7b0f"></span>Ihre Reservation</span><span style="margin-left:auto">Freie Lektion anklicken: Reservation landet im Raumkalender und in Ihrem Kalender</span></div>
+    <div class="rgrid"><div class="rh"></div>${DAYS.map(d=>`<div class="rh">${d}</div>`).join('')}
+      ${LESSONS.map((t,l)=>`<div class="rt">${l+1}. <small>${t}</small></div>${DAYS.map((_,d)=>`<div class="rd">${cell(d,l)}</div>`).join('')}`).join('')}</div>
+    <div id="bookmsg" class="note" style="margin-top:12px;display:none"></div>
+    <div class="note" style="margin-top:12px">Jeder Raum ist ein eigener Kalender (Raumressource, Standard in M365). Reservation aus dem Teams- oder Outlook-Kalender wie eine Einladung; ist der Raum belegt, lehnt er automatisch ab. Der Stundenplan wird einmal pro Semester eingespielt.</div>
+  </div>`;
+}
+function viewTrakt(){
+  return `<div class="faq"><div class="wp"><h3>Traktanden Gesamtkonferenz, 3. November 2026</h3><ol style="line-height:1.6;font-size:13.5px"><li>Begrüssung, Protokoll vom 26. August</li><li>Rückmeldung aus der Schülerbefragung (Kurzfassung im Ordner)</li><li>Klassenstunde auf Donnerstag verlegen? (Umfrage im Beitrag)</li><li>Antrag Fachschaft Musik: Chorreise 2027</li><li>Mittagsangebot in der Mensa ab Februar</li><li>Varia</li></ol></div></div>`;
+}
+
+function viewAllTeams(){
+  const card=(id,l,n,s)=>`<div class="tcard" data-team="${id}"><div class="tl">${l}</div><b>${n}</b><small>${s}</small></div>`;
+  return `<div class="allteams"><h2>Teams</h2><div class="tgrid">${card('kollegium','H','Kollegium Gymnasium Hofwil','alle Lehrpersonen')}${card('k29a','K','Klasse 29a','Klassenteam')}</div></div>`;
+}
+
+function bindContent(){
+  document.querySelectorAll('[data-goto]').forEach(el=>el.onclick=e=>{e.preventDefault();S.tab=el.dataset.goto;render();});
+  document.querySelectorAll('.fchip').forEach(el=>el.onclick=()=>{S.filter=el.dataset.f==='Alle'?null:el.dataset.f;render();});
+  const fb=$('#formsbtn');if(fb)fb.onclick=()=>{S.forms=!S.forms;render();};
+  const fs=$('#formsend');if(fs)fs.onclick=()=>{S.sent=true;render();const r=document.querySelector('.hlrow');if(r)r.classList.add('demo-highlight');};
+  document.querySelectorAll('[data-rv]').forEach(el=>el.onclick=()=>{ROOM_VIEW=el.dataset.rv;render();});
+  const rs=$('#roomsel');if(rs){rs.onchange=()=>{ROOM_SEL=rs.value;render();};}
+  document.querySelectorAll('.rc.free').forEach(el=>el.onclick=()=>{const k=el.dataset.k;const [d,l]=k.split('-').map(Number);BOOKED[ROOM_SEL+'|'+k]='Reservation';render();const m=$('#bookmsg');m.style.display='block';m.innerHTML=`<b>${ROOM_SEL}</b>, ${DAYS[d]}, ${l+1}. Lektion (${LESSONS[l]}): reserviert. Der Termin steht jetzt im Raumkalender und in Ihrem eigenen Kalender; das Sekretariat muss nichts eintragen.`;const c=$('#rc-'+k);if(c)c.classList.add('demo-highlight');});
+  const zq=$('#zq');if(zq){zq.oninput=()=>{S.search=zq.value;const pos=zq.selectionStart;render();const n=$('#zq');n.focus();n.setSelectionRange(pos,pos);};}
+}
+function render(){renderPanel();renderHead();renderContent();const cal=S.team==='kollegium'&&S.ch==='Allgemein'&&S.tab==='Termine';$('#railCal').classList.toggle('active',cal);$('#railTeams').classList.toggle('active',!cal);}
+$('#railCal').onclick=()=>{S.team='kollegium';S.ch='Allgemein';S.tab='Termine';render();};
+$('#railTeams').onclick=()=>{if(S.tab==='Termine'){S.tab='Beiträge';render();}};
+
+/* ---------- Szenarien-Steuerung ---------- */
+function renderChips(){
+  $('#chips').innerHTML=SCEN.map((s,i)=>`<button class="chip ${S.scen===i?'active':''}" data-i="${i}"><span class="n">${i+1}</span>${s.q}</button>`).join('');
+  $('#chips').querySelectorAll('.chip').forEach(el=>el.onclick=()=>runScen(+el.dataset.i));
+}
+function runScen(i){
+  const s=SCEN[i];S.scen=i;
+  const g=s.go;S.team=g.team;S.ch=g.ch||'Allgemein';S.tab=g.tab||'Beiträge';S.filter=g.filter||null;S.search=g.search||'';if(g.room)ROOM_SEL=g.room;S.forms=!!g.forms;ROOM_VIEW=g.rv||'rooms';
+  render();renderChips();
+  document.querySelectorAll('.demo-highlight').forEach(e=>e.classList.remove('demo-highlight'));
+  const el=$(s.hl);if(el){el.classList.add('demo-highlight');setTimeout(()=>el.scrollIntoView({block:'center',behavior:'smooth'}),50);}
+  const c=$('#cmp');c.classList.add('show');
+  c.innerHTML=`<div class="q"><span>${s.sub?`<span class="sub">${s.sub}</span>`:''}${s.q}</span><button id="cmpx" title="Schliessen und selbst weiterklicken">✕</button></div>
+    <div class="cols"><div class="col"><h5>Heute <b>${s.old.length} Schritte</b></h5><ol>${s.old.map(x=>`<li>${x}</li>`).join('')}</ol></div><div class="col"><h5>Neu <b>${s.neu.length} ${s.neu.length===1?'Schritt':'Schritte'}</b></h5><ol>${s.neu.map(x=>`<li>${x}</li>`).join('')}</ol>${s.hint?`<div style="margin-top:8px;font-size:11.5px;color:var(--txt2);font-style:italic;line-height:1.4">${s.hint}</div>`:''}</div></div>
+    <div class="foot"><span class="ds">${i+1} von ${SCEN.length} · Schliessen (✕) und selbst weiterklicken; die Szenarien oben lassen sich jederzeit wieder öffnen.</span><span style="display:flex;gap:6px">${i>0?`<button class="nextbtn sec" id="cmpp">‹ Zurück</button>`:''}${i<SCEN.length-1?`<button class="nextbtn" id="cmpn">Weiter ›</button>`:`<button class="nextbtn" id="cmpn2">Fertig, selbst erkunden</button>`}</span></div>`;
+  $('#cmpx').onclick=()=>{c.classList.remove('show');S.scen=null;renderChips();};
+  const pv=$('#cmpp');if(pv)pv.onclick=()=>runScen(i-1);
+  const n=$('#cmpn');if(n)n.onclick=()=>runScen(i+1);
+  const n2=$('#cmpn2');if(n2)n2.onclick=()=>{c.classList.remove('show');S.scen=null;S.team='kollegium';S.ch='Allgemein';S.tab='Start';render();renderChips();};
+}
+$('#reset').onclick=()=>{S=fresh();BOOKED={};ROOM_SEL='Aula';$('#cmp').classList.remove('show');render();renderChips();};
+$('#introBtn').onclick=()=>{$('#intro').style.display='none';runScen(0);};
+$('#introFree').onclick=()=>{$('#intro').style.display='none';};
+render();renderChips();
+</script>
+</body>
+</html>
