@@ -315,11 +315,11 @@ tr.hlrow td{background:#fff8e1}
     <div id="cmp"></div>
     <div id="intro">
       <div class="box">
-        <h2>Was wäre, wenn alles Interne an einem Ort läge?</h2>
-        <p>Die Website bedient heute drei Gruppen: Öffentlichkeit, Lernende und Eltern, Kollegium. Die ersten beiden bleiben dort. Für das Kollegium zeigt diese Nachbildung von Teams, wie Termine, Formulare, Zuständigkeiten und Mitteilungen an einem Ort aussehen könnten: anklickbar statt in PDFs vergraben.</p>
-        <p>Neun kurze Szenarien führen Sie durch: Jedes stellt eine Alltagsfrage, zeigt im Hintergrund die Stelle, wo die Antwort liegt, und vergleicht den Weg von heute mit dem Weg neu. Sie können die Führung jederzeit schliessen und selbst herumklicken. Nichts davon ist eingerichtet, es ist ein Bild zum Diskutieren.</p>
+        <h2>Alles Interne an einem Ort. Wie sähe das aus?</h2>
+        <p>Unsere Website ist für die Öffentlichkeit, die Lernenden und die Eltern da, und das bleibt so. Für uns im Kollegium zeigt diese kleine Nachbildung von Teams, wie es wäre, wenn Termine, Formulare, Zuständigkeiten und Mitteilungen an einem Ort lägen: anklickbar statt in PDFs versteckt.</p>
+        <p>Acht Alltagsfragen führen dich durch. Du kannst die Führung jederzeit schliessen und selbst herumklicken. Eingerichtet ist nichts davon, es ist ein Bild zum gemeinsamen Anschauen.</p>
         <p style="font-size:12px;color:#8a8a8a">Alle Personen sind Platzhalter.</p>
-        <button id="introBtn">Los geht's</button> <button id="introFree" style="background:#eee;color:#242424">Ohne Führung erkunden</button>
+        <button id="introBtn">Los geht's</button> <button id="introFree" style="background:#eee;color:#242424">Lieber selbst erkunden</button>
       </div>
     </div>
   </div>
@@ -424,49 +424,44 @@ const TABS = {
 
 /* ---------- Szenarien ---------- */
 const SCEN = [
-  {q:'Wann ist die nächste Konferenz und wie kommt sie in meinen Kalender?',
+  {q:'Wann ist die nächste Konferenz?',
    go:{team:'kollegium',ch:'Allgemein',tab:'Termine'}, hl:'#ev-0914',
-   old:['Google-Kollegiumskalender öffnen (abonnierbar, Änderungen kommen an)','Daneben gelten sieben PDF auf der Website: Jahreskalender, TaF-Kalender, Legende mit 30 Abkürzungen, Semesterplan, IW-Plan, LernBar-Plan, Studienberatungs-Plan','Was in einem PDF ändert, kommt per Mail nach','Für Rückfragen in ein anderes Programm wechseln (Mail, Chat)'],
-   neu:['Tab «Termine», im selben Fenster wie Beiträge, Formulare und Chat','Eine Terminquelle mit Kategorien statt Kalender plus sieben PDF plus Mail'],
-   hint:'Fairerweise: Der Google-Kalender kann das meiste davon auch. Der Gewinn liegt darin, dass alles unter einem Dach liegt und die zweite Schiene (PDF und Mail) wegfällt.'},
+   old:['Google-Kalender öffnen','Dazu sieben PDF auf der Website: Jahreskalender, TaF-Kalender, Legende, Semesterplan, IW-Plan, LernBar-Plan, Studienberatung','Änderungen kommen per Mail'],
+   neu:['Tab «Termine»: ein Kalender für alles, gleich neben Beiträgen und Chat'],
+   hint:'Der Google-Kalender kann vieles davon auch. Neu ist: Es gibt nur noch einen Ort, und die PDF-Schiene fällt weg.'},
   {q:'Wer ist zuständig für den Nachteilsausgleich?',
    go:{team:'kollegium',ch:'Allgemein',tab:'Zuständigkeiten',search:'Nachteils'}, hl:'#zust-0',
-   old:['Website «Menschen»: nur Namen, keine Funktionen','Im Lehrerzimmer herumfragen oder eine Mail schicken; die Antwort kommt vielleicht erst am nächsten Tag'],
-   neu:['Tab «Zuständigkeiten», «Nachteils» eintippen: Name, Stellvertretung, Chat-Knopf'],
-   hint:'Nachteilsausgleich ist nur ein Beispiel. Es geht darum, für irgendeine Frage die zuständige Person zu finden, ohne herumzufragen.'},
+   old:['Website «Menschen»: nur Namen','Im Lehrerzimmer fragen oder mailen, Antwort vielleicht morgen'],
+   neu:['Tab «Zuständigkeiten», ein Wort eintippen: Name, Stellvertretung, Chat'],
+   hint:'Nachteilsausgleich ist nur ein Beispiel. Es geht um jede Frage nach «wer macht das eigentlich?».'},
   {q:'Was hat die Schulleitung diese Woche mitgeteilt?',
    go:{team:'kollegium',ch:'Allgemein',tab:'Start'}, hl:'#news',
-   old:['Posteingang nach Absender «Schulleitung» filtern','Zwischen Infoschreiben, Antworten und Weiterleitungen das aktuelle finden','Anhang öffnen'],
-   neu:['Tab «Start»: die aktuellen Mitteilungen stehen auf der Startseite, Kanal «Allgemein» zeigt die Ankündigung']},
-  {q:'Ist die Aula am Mi 16.9. in der 4. Lektion frei? Und wie reserviere ich sie?',
+   old:['Posteingang durchsuchen','Zwischen Infoschreiben, Antworten und Weiterleitungen das Aktuelle finden'],
+   neu:['Tab «Start»: die Mitteilungen stehen immer an derselben Stelle']},
+  {q:'Ist die Aula am Mittwoch in der 4. Lektion frei?',
    go:{team:'kollegium',ch:'Allgemein',tab:'Räume',room:'Aula'}, hl:'#rc-2-3',
-   old:['Raumbelegung als PDF öffnen: zeigt nur den Stundenplan, keine Reservationen','Im Sekretariat nachfragen, ob schon jemand reserviert hat','Reservation dort eintragen lassen und Bestätigung abwarten'],
-   neu:['Tab «Räume», Aula, Mittwoch: die 4. Lektion ist frei','Anklicken: Reservation steht im Raumkalender und im eigenen Kalender'],
-   hint:'Räume als Kalender-Ressourcen sind Standard in M365. Einmal von der IT eingerichtet, danach ohne Betreuung; Doppelbuchungen lehnt der Raum selbst ab.'},
+   old:['Raumbelegung als PDF: zeigt nur den Stundenplan','Im Sekretariat fragen, eintragen lassen, warten'],
+   neu:['Tab «Räume», Aula, freie Lektion anklicken: reserviert, auch im eigenen Kalender'],
+   hint:'Räume als Kalender sind Standard in M365. Die IT richtet sie einmal ein, danach läuft es von selbst.'},
   {q:'Ich brauche das aktuelle Exkursionsgesuch.', sub:'Stufe 1: Ordnung',
    go:{team:'kollegium',ch:'Allgemein',tab:'Formulare',filter:'Exkursionen und Intensivwochen'}, hl:'#form-0',
-   old:['Intranet öffnen, einloggen','Stichwortverzeichnis: heisst es «Formular», «Gesuch», «Auftrag» oder «Exkursion»?','Volltextsuche, Treffer durchsehen','Version und Datum aus dem Dateinamen ableiten'],
-   neu:['Tab «Formulare», Filter «Exkursionen»','Gültige Version öffnen: «Gültig ab» und Verantwortliche stehen daneben']},
-  {q:'Exkursionsgesuch: und wenn man es gleich online einreichen könnte?', sub:'Stufe 2: ein möglicher weiterer Schritt',
+   old:['Intranet, einloggen','Stichwortverzeichnis: heisst es Formular, Gesuch, Auftrag oder Exkursion?','Version aus dem Dateinamen raten'],
+   neu:['Tab «Formulare», Filter «Exkursionen»','Die gültige Version, mit Datum und Ansprechperson daneben']},
+  {q:'Und wenn man das Gesuch gleich hier ausfüllen könnte?', sub:'Stufe 2: ein möglicher nächster Schritt',
    go:{team:'kollegium',ch:'Allgemein',tab:'Formulare',forms:true}, hl:'#formsbox',
-   old:['Lehrperson: Word-Vorlage öffnen, ausfüllen, speichern, per Mail ans Sekretariat','Sekretariat: Mail öffnen, Anhang ablegen, Angaben in die Übersichtsliste abtippen','Sekretariat: an die Schulleitung weiterleiten, Entscheid abwarten, Rückmeldung mailen','Alle: Stand des Gesuchs nur auf Nachfrage bekannt'],
-   neu:['Lehrperson: Formular ausfüllen, senden (zwei Minuten)','Sekretariat: der Antrag steht als Zeile in der Tabelle, nichts abtippen','Schulleitung: Status in derselben Tabelle setzen, Rückmeldung automatisch'],
-   hint:'Das ist kein Muss und keine Bedingung. Es zeigt nur, dass ein Formular (Microsoft Forms) direkt in eine Tabelle schreiben kann, die Sekretariat und Schulleitung teilen. Vor allem für das Sekretariat fällt damit das Abtippen und Weiterleiten weg.'},
-  {q:'Kann ich am Do 24.9. in der 29a eine Prüfung ansetzen?',
+   old:['Ich: Word öffnen, ausfüllen, speichern, mailen','Sekretariat: Mail öffnen, ablegen, abtippen, weiterleiten','Schulleitung: entscheiden, zurückmailen'],
+   neu:['Ich: Formular ausfüllen, senden','Sekretariat: der Antrag steht schon in der Tabelle','Schulleitung: Status setzen, fertig'],
+   hint:'Kein Muss, nur eine Möglichkeit. Am meisten spart dabei das Sekretariat: nichts mehr abtippen, nichts weiterleiten.'},
+  {q:'Kann ich am Donnerstag in der 29a eine Prüfung ansetzen?',
    go:{team:'k29a',ch:'Allgemein',tab:'Prüfungsplan'}, hl:'#wk-39',
-   old:['Belastungsplan der 29a öffnen (separates Dokument, pro Klasse eines)','Woche suchen, Einträge von Hand zählen','Prüfung eintragen','Der Plan hängt mit nichts zusammen: kein Kalender, keine Benachrichtigung'],
-   neu:['Klassenteam 29a, Tab «Prüfungsplan»: KW 39 zeigt bereits zwei Prüfungen','Eintragen: erscheint im Klassenkalender und bei allen Beteiligten'],
-   hint:'Der Unterschied: Wochenansicht mit Anzahl, direkt im Klassenteam, verbunden mit dem Klassenkalender.'},
-  {q:'LernBar-Module: Wann, für wen, und wie melde ich eine Schülerin an?',
-   go:{team:'kollegium',ch:'Allgemein',tab:'Beiträge'}, hl:'#lernbar',
-   old:['LernBar-Terminplan als PDF auf der Website öffnen','Dort steht «Infos im Intranet»: Intranet öffnen, einloggen, suchen','Dort steht «Zuteilung gemäss Belastungsplan»: Belastungsplan der Klasse öffnen','Dort steht eine Mailadresse: Mail schreiben, auf Antwort warten'],
-   neu:['Ein Beitrag im Kanal «Allgemein»: Infoblatt, Prüfungsplan der Klasse und Chat mit der zuständigen Person sind darin verlinkt'],
-   hint:'Vier Dokumente und drei Programme werden zu einem Beitrag mit drei Links. Der Inhalt ist derselbe, nur die Wege dazwischen fallen weg.'},
-  {q:'Wer ist am Donnerstag in der 3. Lektion für individuelles Lernen da?',
+   old:['Belastungsplan der Klasse öffnen, Woche suchen, zählen','Eintragen; der Plan hängt mit nichts zusammen'],
+   neu:['Klassenteam, Tab «Prüfungsplan»: Woche 39 hat schon zwei','Eintragen; steht sofort im Klassenkalender'],
+   hint:'Der Unterschied: Wochenansicht mit Anzahl, und alles hängt zusammen.'},
+  {q:'Wer ist am Donnerstag in der 3. Lektion fürs IL da?',
    go:{team:'kollegium',ch:'Allgemein',tab:'Räume',rv:'il'}, hl:'#il-3-2',
-   old:['IL-Plan als PDF auf der Website öffnen (eine Seite, Kürzel und Raumnummern eng gesetzt)','Kürzel in der Kürzelliste nachschlagen','Lehrperson per Mail oder im Lehrerzimmer suchen'],
+   old:['IL-Plan als PDF, eng bedruckt','Kürzel nachschlagen, Person suchen'],
    neu:['Tab «Räume», Ansicht «Individuelles Lernen»: Kürzel anklicken, Chat geht auf'],
-   hint:'Der IL-Plan ist inhaltlich ein Raumkalender (Lehrperson, Raum, Lektion). Er wird nicht neu erfasst, sondern nur anders angezeigt.'}
+   hint:'Der IL-Plan ist eigentlich ein Raumkalender. Er wird nicht neu gemacht, nur anders angezeigt.'},
 ];
 
 /* ---------- Zustand ---------- */
@@ -577,7 +572,7 @@ function viewStart(){
     <div class="hero"><div><h1>Kollegium Hofwil</h1><div class="sub">Startseite Kollegium · Dienstag, 8. September 2026</div></div><span class="edit">✎ Bearbeiten (Sekretariat)</span></div>
     <div class="grid">
       <div style="display:grid;gap:18px">
-        <div class="wp" id="ql"><h3>Schnellzugriff <small>Links auf die eine gültige Quelle</small></h3><div class="ql">
+        <div class="wp" id="ql"><h3>Schnellzugriff <small>immer die gültige Version</small></h3><div class="ql">
           ${tile('▦','#5b5fc7','Stundenpläne','alle Klassen')}
           ${tile('⌂','#0f7b0f','Räume','frei, belegt, buchen')}
           ${tile('Aa','#8a8a8a','Kürzelliste','26/27')}
@@ -611,9 +606,9 @@ function viewCal(){
     return `<div class="dc ${k==='2026-09-08'?'today':''} ${other?'other':''}"><div class="dn">${x.getDate()}${x.getDate()===1?(x.getMonth()===8?'. Sept.':'. Okt.'):''}</div>${evs.map(e=>`<div class="cev c${e.c}" id="ev-${k.slice(5).replace('-','')}" title="${esc(e.t)}">${e.time&&e.time!=='ganztägig'?e.time.split(',')[0]+' ':''}${esc(e.t)}</div>`).join('')}${inIW?'<div class="cev c2">Intensivwoche 1</div>':''}${inF?'<div class="cev c4">Herbstferien</div>':''}</div>`}).join('');
   return `<div class="cal">
     <div class="head"><h2>Kollegiumskalender</h2><span class="b">‹</span><span class="b">Heute</span><span class="b">›</span><b style="font-size:15px">September 2026</b><span style="margin-left:auto;color:var(--txt2)">Arbeitswoche ▾ &nbsp; <span class="b">＋ Neuer Termin</span> &nbsp; <span class="b">Im eigenen Kalender abonniert ✓</span></span></div>
-    <div class="legend">${Object.entries(CATS).map(([k,v])=>`<span><span class="cat" style="background:${CATCOL[k]}"></span>${v}</span>`).join('')}<span style="margin-left:auto">Ersetzt Jahreskalender, TaF-Kalender, Legende, Semesterplan, IW-Plan, LernBar-Plan und Studienberatungs-Plan</span></div>
+    <div class="legend">${Object.entries(CATS).map(([k,v])=>`<span><span class="cat" style="background:${CATCOL[k]}"></span>${v}</span>`).join('')}<span style="margin-left:auto">An Stelle von sieben PDF-Plänen</span></div>
     <div class="calgrid">${['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'].map(x=>`<div class="dh">${x}</div>`).join('')}${cells}</div>
-    <div class="note" style="margin-top:12px">Der Jahresplan als PDF bleibt für Eltern und Lernende auf der Website. Im Kollegium ist dieser Kalender die Arbeitsgrundlage: Er erscheint im eigenen Kalender neben dem Stundenplan, Änderungen kommen automatisch.</div>
+    <div class="note" style="margin-top:12px">Für Eltern und Lernende bleibt der Jahresplan auf der Website. Für uns ist dieser Kalender der eine Ort: Er erscheint im eigenen Kalender, Änderungen kommen von allein.</div>
   </div>`;
 }
 
@@ -624,15 +619,15 @@ function viewForms(){
   return `<div class="list">
     <div class="cmdbar"><span class="b primary">＋ Neu ▾</span><span class="b" id="formsbtn" style="border:1px solid var(--line2);background:#fff;color:var(--brand);font-weight:600">✎ Exkursionsgesuch online einreichen</span><span class="b">↑ Hochladen ▾</span><span class="b">↗ Teilen</span><span class="b">⇩ Herunterladen</span><span class="sp"></span><span class="b">Alle Dokumente ▾</span><span class="b">Filter</span></div>
     <div class="chips2">${['Alle',...cats].map(c=>`<button class="fchip ${(c==='Alle'&&!S.filter)||c===S.filter?'on':''}" data-f="${esc(c)}">${c}</button>`).join('')}</div>
-    <div class="note">Nur leere Vorlagen und Merkblätter (nicht klassifiziert, datenschutzrechtlich unproblematisch).</div>
+    <div class="note">Hier liegen nur leere Vorlagen und Merkblätter.</div>
     ${S.forms?viewFormsBox():''}
     <table class="sl"><thead><tr><th>Name</th><th>Kategorie</th><th>Verantwortlich</th><th>Gültig ab</th><th>Schuljahr</th><th></th></tr></thead><tbody>${rows}</tbody></table>
   </div>`;
 }
 function viewFormsBox(){
   const sent=S.sent;
-  return `<div id="formsbox" class="fbox"><div class="fcol"><div class="fhead"><span class="fico" style="background:#038387;width:22px;height:22px;font-size:9px">F</span><b>Exkursionsgesuch</b><small>Microsoft Forms · antwortet in die Tabelle des Sekretariats</small></div>
-    ${sent?`<div class="fok">✓ Gesuch gesendet. Es steht jetzt als Zeile 4 in der Tabelle rechts; die Schulleitung sieht es dort und setzt den Status. Sie erhalten die Rückmeldung als Chat-Nachricht.</div>`:`
+  return `<div id="formsbox" class="fbox"><div class="fcol"><div class="fhead"><span class="fico" style="background:#038387;width:22px;height:22px;font-size:9px">F</span><b>Exkursionsgesuch</b><small>Microsoft Forms · schreibt direkt in die Tabelle rechts</small></div>
+    ${sent?`<div class="fok">✓ Gesendet. Das Gesuch steht jetzt als Zeile 4 in der Tabelle rechts. Die Schulleitung sieht es dort und setzt den Status.</div>`:`
     <label>Klasse <select><option>29a</option><option>29b</option><option>30a</option></select></label>
     <label>Datum <input value="Mi 21.10.2026"></label>
     <label>Ziel <input value="Berner Altstadt, Stadtarchiv"></label>
@@ -647,7 +642,7 @@ function viewFormsBox(){
       <tr><td>3</td><td>7.9.</td><td>28a</td><td>5.11.</td><td>Kernkraftwerk Mühleberg</td><td>WAM</td><td><span class="tag">in Prüfung</span></td></tr>
       ${sent?`<tr class="hlrow"><td>4</td><td>heute</td><td>29a</td><td>21.10.</td><td>Berner Altstadt, Stadtarchiv</td><td>DL</td><td><span class="tag">eingereicht</span></td></tr>`:''}
     </tbody></table>
-    <div style="font-size:11.5px;color:var(--txt2);margin-top:8px;line-height:1.4">Für das Sekretariat: kein Anhang öffnen, nichts abtippen, keine Weiterleitung. Für die Schulleitung: alle offenen Gesuche in einer Ansicht, Status per Klick. Für die Lehrperson: Stand jederzeit sichtbar.</div></div></div>`;
+    <div style="font-size:11.5px;color:var(--txt2);margin-top:8px;line-height:1.4">Sekretariat: nichts abtippen, nichts weiterleiten. Schulleitung: alle Gesuche auf einen Blick. Lehrperson: sieht jederzeit, wo es steht.</div></div></div>`;
 }
 
 function viewZust(){
@@ -665,17 +660,17 @@ function viewZust(){
 function viewPruef(){
   return `<div class="list"><div class="cmdbar"><span class="b primary">＋ Prüfung eintragen</span><span class="b">Kalenderansicht</span><span class="b">Gruppiert nach Woche ▾</span><span class="sp"></span><span style="font-size:12px">Abmachung der Klasse: höchstens 2 Prüfungen pro Woche</span></div>
     <div class="side2"><div class="weeks">${PRUEF.map(p=>{const n=p.ex.length;return `<div class="wk ${n>=2?'mid':'ok'}" id="wk-${p.w.replace('KW ','')}"><div class="wn">${p.w} <span style="color:var(--txt3);font-weight:400">(${p.note?'Ferien':n})</span><small>${p.r}</small></div><div class="ex">${p.note?`<span style="background:#f0f0f0">${p.note}</span>`:p.ex.map(e=>`<span>${e}</span>`).join('')||'<span style="border-style:dashed;color:var(--txt3)">frei</span>'}</div><div class="cnt">${p.note?'':n+' Prüfung'+(n===1?'':'en')}</div></div>`}).join('')}</div>
-    <div><div class="wp"><h3>Prüfungsplan 29a</h3><p style="font-size:12.5px;color:var(--txt2);margin:0;line-height:1.45">Liste im Klassenteam, gruppiert nach Woche mit Anzahl. Eintragen können alle Lehrpersonen der Klasse; die Klassenchefin sieht denselben Plan. Jeder Eintrag erscheint im Klassenkalender.</p></div></div></div></div>`;
+    <div><div class="wp"><h3>Prüfungsplan 29a</h3><p style="font-size:12.5px;color:var(--txt2);margin:0;line-height:1.45">Alle Lehrpersonen der Klasse tragen hier ein, die Klassenchefin sieht denselben Plan. Jeder Eintrag steht auch im Klassenkalender.</p></div></div></div></div>`;
 }
 
 function viewIL(){
   const cell=(d,l)=>{const o=IL[d+'-'+l];return o?`<div class="rc il" id="il-${d}-${l}" title="${o[0]} für individuelles Lernen in ${o[1]}">${o[0]} · ${o[1]}</div>`:'<div class="rc none"></div>';};
   return `<div class="rooms">
     <div class="cmdbar"><span style="font-weight:600;font-size:15px">Individuelles Lernen (IL)</span><span class="b" style="border:1px solid var(--line2);background:#fff">Phase 1, 10.8. bis 30.10. ▾</span><span class="sp"></span>${viewSwitch()}</div>
-    <div class="legend"><span><span class="cat" style="background:#0e7490"></span>Lehrperson erreichbar, Raum</span><span style="margin-left:auto">Kürzel anklicken: Chat mit der Lehrperson · Ersetzt den IL-Plan als PDF</span></div>
+    <div class="legend"><span><span class="cat" style="background:#0e7490"></span>Lehrperson erreichbar, Raum</span><span style="margin-left:auto">Kürzel anklicken: Chat geht auf</span></div>
     <div class="rgrid"><div class="rh"></div>${['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'].map(d=>`<div class="rh">${d}</div>`).join('')}
       ${LESSONS.map((t,l)=>`<div class="rt">${l+1}. <small>${t}</small></div>${[0,1,2,3,4].map(d=>`<div class="rd">${cell(d,l)}</div>`).join('')}`).join('')}</div>
-    <div class="note" style="margin-top:12px">Derselbe Kalender wie die Räume, nur nach Lehrperson statt nach Raum angezeigt. Wer eine IL-Lektion übernimmt, trägt sie einmal ein; der PDF-Plan entfällt.</div>
+    <div class="note" style="margin-top:12px">Derselbe Kalender wie bei den Räumen, nur nach Lehrperson sortiert. Einmal eintragen, kein PDF mehr.</div>
   </div>`;
 }
 function viewSwitch(){return `<span style="font-size:12px;color:var(--txt2)">Ansicht:</span><button class="fchip ${ROOM_VIEW==='rooms'?'on':''}" data-rv="rooms">Räume</button><button class="fchip ${ROOM_VIEW==='il'?'on':''}" data-rv="il">Individuelles Lernen</button>`;}
@@ -688,11 +683,11 @@ function viewRooms(){
   return `<div class="rooms">
     <div class="cmdbar"><span style="font-weight:600;font-size:15px">Raumkalender</span><span class="b" style="border:1px solid var(--line2);background:#fff">Woche 38, 14. bis 18. Sept. ▾</span>${viewSwitch()}<span class="sp"></span>
       <span style="font-size:12px;color:var(--txt2)">Raum:</span><select id="roomsel" style="font:inherit;padding:5px 8px;border:1px solid var(--line2);border-radius:4px;background:#fff">${ROOMS.map(r=>`<option ${r===ROOM_SEL?'selected':''}>${r}</option>`).join('')}</select></div>
-    <div class="legend"><span><span class="cat" style="background:#bdbdbd"></span>Stundenplan</span><span><span class="cat" style="background:#5b5fc7"></span>Reservation (Kürzel)</span><span><span class="cat" style="background:#0f7b0f"></span>Ihre Reservation</span><span style="margin-left:auto">Freie Lektion anklicken: Reservation landet im Raumkalender und in Ihrem Kalender</span></div>
+    <div class="legend"><span><span class="cat" style="background:#bdbdbd"></span>Stundenplan</span><span><span class="cat" style="background:#5b5fc7"></span>Reservation (Kürzel)</span><span><span class="cat" style="background:#0f7b0f"></span>Ihre Reservation</span><span style="margin-left:auto">Freie Lektion anklicken, fertig</span></div>
     <div class="rgrid"><div class="rh"></div>${DAYS.map(d=>`<div class="rh">${d}</div>`).join('')}
       ${LESSONS.map((t,l)=>`<div class="rt">${l+1}. <small>${t}</small></div>${DAYS.map((_,d)=>`<div class="rd">${cell(d,l)}</div>`).join('')}`).join('')}</div>
     <div id="bookmsg" class="note" style="margin-top:12px;display:none"></div>
-    <div class="note" style="margin-top:12px">Jeder Raum ist ein eigener Kalender (Raumressource, Standard in M365). Reservation aus dem Teams- oder Outlook-Kalender wie eine Einladung; ist der Raum belegt, lehnt er automatisch ab. Der Stundenplan wird einmal pro Semester eingespielt.</div>
+    <div class="note" style="margin-top:12px">Jeder Raum hat seinen eigenen Kalender. Reservieren geht wie eine Einladung; ist der Raum belegt, sagt er selbst nein. Der Stundenplan wird einmal pro Semester eingespielt.</div>
   </div>`;
 }
 function viewTrakt(){
@@ -732,7 +727,7 @@ function runScen(i){
   const c=$('#cmp');c.classList.add('show');
   c.innerHTML=`<div class="q"><span>${s.sub?`<span class="sub">${s.sub}</span>`:''}${s.q}</span><button id="cmpx" title="Schliessen und selbst weiterklicken">✕</button></div>
     <div class="cols"><div class="col"><h5>Heute <b>${s.old.length} Schritte</b></h5><ol>${s.old.map(x=>`<li>${x}</li>`).join('')}</ol></div><div class="col"><h5>Neu <b>${s.neu.length} ${s.neu.length===1?'Schritt':'Schritte'}</b></h5><ol>${s.neu.map(x=>`<li>${x}</li>`).join('')}</ol>${s.hint?`<div style="margin-top:8px;font-size:11.5px;color:var(--txt2);font-style:italic;line-height:1.4">${s.hint}</div>`:''}</div></div>
-    <div class="foot"><span class="ds">${i+1} von ${SCEN.length} · Schliessen (✕) und selbst weiterklicken; die Szenarien oben lassen sich jederzeit wieder öffnen.</span><span style="display:flex;gap:6px">${i>0?`<button class="nextbtn sec" id="cmpp">‹ Zurück</button>`:''}${i<SCEN.length-1?`<button class="nextbtn" id="cmpn">Weiter ›</button>`:`<button class="nextbtn" id="cmpn2">Fertig, selbst erkunden</button>`}</span></div>`;
+    <div class="foot"><span class="ds">${i+1} von ${SCEN.length} · Mit ✕ schliessen und selbst herumklicken</span><span style="display:flex;gap:6px">${i>0?`<button class="nextbtn sec" id="cmpp">‹ Zurück</button>`:''}${i<SCEN.length-1?`<button class="nextbtn" id="cmpn">Weiter ›</button>`:`<button class="nextbtn" id="cmpn2">Fertig</button>`}</span></div>`;
   $('#cmpx').onclick=()=>{c.classList.remove('show');S.scen=null;renderChips();};
   const pv=$('#cmpp');if(pv)pv.onclick=()=>runScen(i-1);
   const n=$('#cmpn');if(n)n.onclick=()=>runScen(i+1);
