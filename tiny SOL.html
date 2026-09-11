@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weiterentwicklung SOL</title>
+<style>
+:root{--brand:#5b5fc7;--brand-dark:#4f52b2;--brand-light:#e8ebfa;--bg-rail:#ebebeb;--bg-panel:#f0f0f0;--bg-main:#f5f5f5;--txt:#242424;--txt2:#616161;--txt3:#8a8a8a;--line:#e0e0e0;--line2:#d1d1d1;--ok:#0f7b0f;--warn:#c50f1f;--amber:#835b00;--demo:#1b1b2f;--demo2:#2b2b45;--teal:#038387}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:"Segoe UI","Segoe UI Web (West European)",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif;font-size:14px;color:var(--txt);background:#111}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:var(--brand);text-decoration:none}
+#app{display:flex;flex-direction:column;height:100vh;min-height:640px}
+#demobar{background:var(--demo);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #000;font-size:13px}
+#demobar .lbl{font-weight:600;color:#aab;font-size:12px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.tl{display:flex;flex:1;align-items:center;overflow-x:auto}
+.st{display:flex;flex-direction:column;align-items:flex-start;padding:4px 12px 4px 10px;border-left:2px solid #44446a;min-width:130px;color:#dde;transition:.15s;text-align:left}
+.st small{font-size:10px;color:#aab;text-transform:uppercase;letter-spacing:.04em}
+.st b{font-size:12px;font-weight:600;line-height:1.2}
+.st:hover{background:#2b2b45}
+.st.active{background:var(--brand);border-left-color:#fff;color:#fff}
+.st.active small{color:#e6e6ff}
+#reset{color:#aab;font-size:12px;text-decoration:underline;white-space:nowrap}
+#teams{flex:1;display:flex;flex-direction:column;min-height:0;background:var(--bg-main);position:relative}
+#topbar{height:48px;background:var(--bg-rail);display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid var(--line2)}
+#topbar .logo{width:24px;height:24px;border-radius:5px;background:var(--brand);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+#topbar .nav{display:flex;gap:2px;color:var(--txt3)}#topbar .nav span{padding:2px 6px}
+#topbar .search{flex:0 1 640px;margin:0 auto;height:32px;background:#fff;border:1px solid var(--line2);border-radius:6px;display:flex;align-items:center;padding:0 10px;color:var(--txt3);gap:8px}
+#topbar .right{display:flex;align-items:center;gap:10px;color:var(--txt2);font-size:13px}
+.avatar{width:28px;height:28px;border-radius:50%;background:#7a7ad6;color:#fff;display:inline-grid;place-items:center;font-size:11px;font-weight:600;flex:none}
+.avatar.s{width:22px;height:22px;font-size:9px}.avatar.st{background:#3d8f6b}
+#body{flex:1;display:flex;min-height:0}
+#rail{width:68px;background:var(--bg-rail);display:flex;flex-direction:column;align-items:center;padding-top:6px;gap:2px;border-right:1px solid var(--line2)}
+.railbtn{width:60px;padding:7px 0 5px;border-radius:6px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--txt2)}
+.railbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5}
+.railbtn.active{color:var(--brand);position:relative}
+.railbtn.active:before{content:"";position:absolute;left:-4px;top:10px;width:3px;height:22px;border-radius:2px;background:var(--brand)}
+#panel{width:290px;background:var(--bg-panel);border-right:1px solid var(--line2);display:flex;flex-direction:column;min-height:0}
+.teamhead{padding:18px 14px 10px}
+.teamhead .tlogo{width:52px;height:52px;border:1px solid var(--line2);background:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;margin-bottom:8px;border-radius:2px}
+.teamhead .tname{font-weight:600;font-size:15px}
+.teamhead .tsub{font-size:11.5px;color:var(--txt3);margin-top:2px}
+.grp{padding:4px 8px 0}
+.grp .gh{font-size:12px;color:var(--txt2);padding:8px 6px 4px}
+.ch{display:flex;align-items:center;gap:6px;padding:6px 8px 6px 26px;border-radius:4px;font-size:14px;color:var(--txt);cursor:pointer;position:relative}
+.ch:hover{background:#e6e6e6}
+.ch.active{background:#fff;font-weight:600}
+.ch.active:before{content:"";position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:2px;background:var(--brand)}
+.ch.dim{color:var(--txt3);cursor:default}.ch.dim:hover{background:none}
+.ch .lock{margin-left:auto;color:var(--txt3);font-size:12px}
+.panel-foot{margin-top:auto;padding:10px 14px;font-size:11.5px;color:var(--txt3);border-top:1px solid var(--line);line-height:1.4}
+#main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+#chanhead{height:52px;display:flex;align-items:center;padding:0 16px;gap:14px;background:#fff;border-bottom:1px solid var(--line)}
+#chanhead .cicon{font-size:26px;font-weight:300;color:var(--txt2);line-height:1}
+#chanhead .cname{font-weight:700;font-size:18px;white-space:nowrap}
+#tabs{display:flex;gap:2px;align-items:stretch;height:52px;margin-left:8px;overflow-x:auto}
+.tab{padding:0 10px;display:flex;align-items:center;font-size:14px;color:var(--txt2);border-bottom:3px solid transparent;white-space:nowrap}
+.tab.active{color:var(--txt);font-weight:600;border-bottom-color:var(--brand)}
+.tab.plus{color:var(--txt3);font-size:18px}
+#chanhead .actions{margin-left:auto;display:flex;align-items:center;gap:14px;color:var(--txt2);font-size:13px}
+#chanhead .meet{border:1px solid var(--line2);border-radius:4px;padding:5px 10px;background:#fff}
+#content{flex:1;overflow:auto;position:relative}
+.posts{max-width:900px;margin:0 auto;padding:18px 16px 80px}
+.post{background:#fff;border:1px solid var(--line);border-radius:4px;margin-bottom:14px}
+.post .ph{display:flex;gap:10px;padding:12px 14px 0}
+.post .ph .meta{font-size:13px}.post .ph .meta b{font-weight:600}
+.post .ph .meta span.when{color:var(--txt3);margin-left:8px;font-size:12px}
+.post .pb{padding:6px 14px 12px 54px;line-height:1.45}
+.post .pb h4{margin:4px 0 8px;font-size:16px}
+.post .pr{border-top:1px solid var(--line);padding:8px 14px;font-size:13px;color:var(--txt2)}
+.post.ann .banner{background:linear-gradient(90deg,#5b5fc7,#7f84e0);color:#fff;padding:14px 16px;font-size:18px;font-weight:600;border-radius:4px 4px 0 0}
+.post.ann .sub{background:#eef0fb;padding:6px 16px;font-size:12px;color:var(--brand-dark);font-weight:600}
+.post.ann .pb{padding:12px 16px}
+.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:var(--brand-light);color:var(--brand-dark);font-weight:600;margin-left:4px}
+.reply{display:flex;gap:10px;padding:8px 14px 10px;border-top:1px solid var(--line);font-size:13px;line-height:1.4}
+.reply .who{font-size:12px;color:var(--txt3)}
+.compose{position:sticky;bottom:0;display:flex;justify-content:center;padding:10px 0 4px;background:linear-gradient(transparent,var(--bg-main) 40%)}
+.compose button{background:var(--brand);color:#fff;padding:8px 14px;border-radius:4px;font-weight:600;font-size:13px}
+.lc{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:4px;padding:5px 10px;margin:8px 6px 0 0;font-size:12.5px;background:#fafafa;color:var(--txt);cursor:pointer}
+.lc:hover{border-color:var(--brand);background:#fff}
+.lc .i{width:16px;height:16px;border-radius:3px;display:inline-grid;place-items:center;font-size:8px;font-weight:700;color:#fff}
+.i.fo{background:var(--teal)}.i.li{background:#7719aa}.i.bk{background:#0b6a0b}.i.xl{background:#107c41}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:3px;background:#eef;color:#334;margin:1px 3px 1px 0;white-space:nowrap}
+.tag.ok{background:#e6f4e6;color:var(--ok)}.tag.amb{background:#fff4ce;color:var(--amber)}.tag.chef{background:#fbe9e0;color:#8a3a12}.tag.miss{background:#fdecec;color:var(--warn)}
+.list{padding:14px 20px 60px}
+.cmdbar{display:flex;gap:14px;align-items:center;padding:6px 0 12px;font-size:13px;color:var(--txt2);flex-wrap:wrap}
+.cmdbar .b{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:4px}
+.cmdbar .b.primary{color:var(--brand);font-weight:600}
+.cmdbar .sp{flex:1}
+table.sl{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);font-size:13px}
+table.sl th{text-align:left;font-weight:600;color:var(--txt2);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line);background:#fafafa;white-space:nowrap}
+table.sl td{padding:7px 10px;border-bottom:1px solid #eee;vertical-align:middle}
+table.sl tr:hover td{background:#f7f7fb}
+table.sl tr.lowrow td{background:#fff8f8}
+table.sl tr.hlrow td{background:#fff8e1}
+table.sl select{font:inherit;font-size:12.5px;padding:3px 6px;border:1px solid var(--line2);border-radius:4px;background:#fff}
+.kz{display:inline-block;border:1px solid var(--line2);border-radius:3px;padding:1px 6px;font-size:12px;background:#fafafa;margin:1px 2px 1px 0;cursor:help}
+.kz.me{background:#e6f4e6;border-color:var(--ok);color:var(--ok);font-weight:600}
+.addme{font-size:11px;color:var(--brand);border:1px dashed var(--brand);border-radius:3px;padding:1px 6px;margin-left:2px}
+.note{font-size:12px;color:var(--txt2);background:#fff;border:1px solid var(--line);border-left:3px solid var(--brand);padding:8px 12px;border-radius:3px;margin-bottom:12px;line-height:1.4}
+.stat{display:inline-block;font-size:12px;color:var(--txt2);margin-left:auto}
+.two{display:grid;grid-template-columns:1fr 1.2fr;gap:14px}
+.fcol{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.fhead{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.fhead b{font-size:14px}.fhead small{width:100%;color:var(--txt3);font-size:11px}
+.fcol label{display:block;font-size:12px;color:var(--txt2);margin:6px 0}
+.fcol input,.fcol select,.fcol textarea{display:block;width:100%;font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line2);border-radius:4px;margin-top:2px;background:#fff;color:var(--txt)}
+.fcol .req{background:#fffbea;border:1px solid #e8d48b;border-radius:4px;padding:8px 10px;margin-top:6px}
+.fcol .req small{display:block;color:var(--amber);font-size:11.5px;line-height:1.4;margin-bottom:4px}
+.fsend{background:var(--teal);color:#fff;padding:7px 16px;border-radius:4px;font-weight:600;margin-top:10px}
+.fok{background:#e6f4e6;color:var(--ok);border-radius:4px;padding:10px 12px;font-size:13px;line-height:1.45}
+.fico{width:22px;height:22px;border-radius:3px;display:inline-grid;place-items:center;font-size:9px;font-weight:700;color:#fff}
+.bk{display:grid;grid-template-columns:200px 1fr;gap:14px}
+.bk .types div{border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin-bottom:8px;background:#fff;cursor:pointer;font-size:13px}
+.bk .types div.on{border-color:#0b6a0b;background:#eef7ee}
+.bk .types small{display:block;color:var(--txt3);font-size:11px}
+.bk .days{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.bk .day{background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px}
+.bk .day b{display:block;font-size:12.5px;margin-bottom:6px}
+.bk .slot{border:1px solid var(--line2);border-radius:4px;padding:4px 6px;font-size:12px;margin:3px 0;text-align:center;cursor:pointer;background:#fafafa}
+.bk .slot.taken{color:#bbb;border-style:dashed;cursor:default;background:#fff}
+.bk .slot.mine{background:#e6f4e6;border-color:var(--ok);color:var(--ok);font-weight:600}
+.demo-highlight{outline:3px solid #ff8c00 !important;outline-offset:3px;border-radius:4px;animation:pulse 1.2s ease-in-out 3}
+@keyframes pulse{0%,100%{outline-color:#ff8c00}50%{outline-color:rgba(255,140,0,.15)}}
+#cmp{position:absolute;right:18px;bottom:18px;width:520px;background:#fff;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.28);border:1px solid #ccc;display:none;z-index:50;font-size:13px;overflow:hidden}
+#cmp.show{display:block}
+#cmp .q{padding:12px 14px 6px;font-size:14px;font-weight:600;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+#cmp .q .sub{display:block;font-size:11px;color:var(--brand-dark);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+#cmp .q button{color:var(--txt3);font-size:15px;line-height:1}
+#cmp .cols{display:grid;grid-template-columns:1fr 1fr}
+#cmp .col{padding:8px 14px 12px;line-height:1.45;font-size:12.5px}
+#cmp .col:first-child{border-right:1px solid var(--line);background:#f8f8f8}
+#cmp .col:last-child{background:#f4faf4}
+#cmp .col h5{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--txt2)}
+#cmp .col p{margin:0 0 6px}
+#cmp .obs{font-size:11px;color:var(--txt3);margin-top:6px}
+#cmp .foot{padding:8px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--txt2);display:flex;justify-content:space-between;align-items:center;gap:10px}
+#cmp .nextbtn{background:var(--brand);color:#fff;padding:5px 10px;border-radius:4px;font-weight:600;font-size:12px;white-space:nowrap}
+#cmp .nextbtn.sec{background:#e6e6e6;color:var(--txt)}
+#intro{position:absolute;inset:0;display:grid;place-items:center;background:rgba(17,17,47,.55);z-index:60}
+#intro .box{background:#fff;border-radius:10px;max-width:560px;padding:26px 30px;box-shadow:0 10px 40px rgba(0,0,0,.35);line-height:1.5}
+#intro h2{margin:0 0 8px;font-size:20px}
+#intro p{margin:6px 0;font-size:14px;color:var(--txt2)}
+#intro button{background:var(--brand);color:#fff;padding:9px 16px;border-radius:5px;font-weight:600;margin-top:12px}
+@media (max-width:1100px){#panel{width:240px} .two,.bk{grid-template-columns:1fr} #cmp{width:calc(100% - 36px)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="demobar"><span class="lbl">Weiterentwicklung SOL</span><div class="tl" id="tl"></div><button id="reset">Zurücksetzen</button></div>
+  <div id="teams">
+    <div id="topbar"><div class="logo">T</div><div class="nav"><span>‹</span><span>›</span></div><div class="search">⌕ <span>Suchen (Ctrl+E)</span></div><div class="right"><span>···</span><span>gymhofwil.ch</span><div class="avatar" title="Du, Demo-Lehrperson">DL</div></div></div>
+    <div id="body">
+      <div id="rail">
+        <button class="railbtn"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0v5l2 3H4l2-3z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>Aktivität</button>
+        <button class="railbtn"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Kalender</button>
+        <button class="railbtn active"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19a6 6 0 0 1 12 0M14 18a4.5 4.5 0 0 1 7 0"/></svg>Kanäle</button>
+      </div>
+      <div id="panel"></div>
+      <div id="main"><div id="chanhead"></div><div id="content"></div></div>
+    </div>
+    <div id="cmp"></div>
+    <div id="fmodal" style="display:none;position:absolute;inset:0;background:rgba(17,17,47,.5);z-index:55;place-items:center"><div class="fcol" style="width:560px;max-height:90%;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.35)" id="fmbody"></div></div>
+    <div id="intro"><div class="box">
+      <h2>SOL-Woche: gleich gut, weniger Papierkram?</h2>
+      <p>Die SOL-Woche ist eine gute Sache. Was drum herum liegt, Tabellen, Anhänge, Antwortmails an alle, ist einfach viel. Diese Nachbildung zeigt, wie dieselben Schritte in einem Bereich aussehen könnten, der nur für die SOL-Woche angelegt wird.</p>
+      <p>Sechs Stationen vom Juni bis zum Freitagmittag. Der Ablauf bleibt, wie er ist; es ändern sich nur die Orte. Ein Vorschlag, nicht mehr.</p>
+      <p style="font-size:12px;color:#8a8a8a">Alle Personen sind Platzhalter. Die Mailzahlen sind eine einzelne Beobachtung aus diesem Schuljahr.</p>
+      <button id="introBtn">Los geht's</button> <button id="introFree" style="background:#eee;color:#242424">Lieber selbst erkunden</button>
+    </div></div>
+  </div>
+</div>
+
+<script>
+/* ---------- Platzhalter ---------- */
+const NAMES={HAK:'Kurt Hahn (Organisation SOL-Woche)',FRC:'Célestin Freinet (Koordination 30a)',MOM:'Maria Montessori',ARH:'Hannah Arendt',FEA:'Adolphe Ferrière',KEE:'Ellen Key',DL:'Du (Demo-Lehrperson)',
+  LIA:'Astrid Lindgren (Koordination 30b)',PEJ:'Johann Heinrich Pestalozzi',WAM:'Martin Wagenschein',TAS:'Sophie Taeuber-Arp',KOJ:'Janusz Korczak',
+  DEJ:'John Dewey (Koordination 30c)',OTB:'Berthold Otto',KEG:'Georg Kerschensteiner',GRN:'Nikolai Grundtvig',
+  PIJ:'Jean Piaget (Koordination 30d)',FRP:'Paulo Freire',COJ:'Johann Amos Comenius',MAL:'Loris Malaguzzi',ROE:'Elisabeth Rotten',
+  PAH:'Helen Parkhurst (Koordination 30e)',PIE:'Emmi Pikler',NEA:'Alexander S. Neill',DEO:'Ovide Decroly'};
+const kz=(k)=>`<span class="kz ${k==='DL'?'me':''}" title="${NAMES[k]||k}">${k}</span>`;
+const COACHES=['FRC','MOM','ARH','FEA','KEE','DL'];
+const GRUPPEN=[['30a',['FRC','MOM','ARH','FEA','KEE','DL'],'201, 204, 206'],['30b',['LIA','PEJ','WAM','TAS','KOJ'],'Cabane'],['30c',['DEJ','OTB','KEG','GRN'],'Pavillon, Parterre'],['30d',['PIJ','FRP','COJ','MAL','ROE'],'107 bis 112'],['30e',['PAH','PIE','NEA','DEO'],'Wankdorffeldstrasse 102']];
+const SUS=['Meret Oppenheim','Paul Klee','Käthe Kollwitz','Johannes Itten','Alberto Giacometti','Niki de Saint Phalle','Ferdinand Hodler','Cuno Amiet','Tove Jansson','Selma Lagerlöf','Erich Kästner','Friedrich Glauser','Annemarie Schwarzenbach','Alice Bailly','Max Frisch','Anna Seghers','Ella Maillart','Hermann Hesse','Mariella Mehr','Jean Tinguely'];
+const FRAGEN=['Wie verändert Musik beim Lernen meine Konzentration?','Welche Trainingsmethode verbessert meinen Aufschlag am schnellsten?','Wie wirkt sich Schlafdauer auf meine Reaktionszeit aus?','Warum vergleichen sich Menschen mit anderen?','Wie reagieren Bäume auf dem Schulareal auf Hitze?','Was macht ein Lied traurig?','Wie lernt man am schnellsten jonglieren?','Welche Ernährung hilft beim Ausdauersport?','Wie beeinflusst Licht meine Stimmung?','Wie entstehen Gerüchte in einer Klasse?','Kann ich in einer Woche eine Sprache anfangen?','Wie erkennt man Fake-Bilder?','Wie verändert sich der Puls beim Kaltbaden?','Was macht einen Comic spannend?','Wie plane ich eine Velotour über 200 km?','Wie schreibe ich einen Songtext?','Warum träumen wir?'];
+const METH=['Experiment','Interview','Literatur','Umfrage','Beobachtung'];
+let PROJ=SUS.map((n,i)=>({n,f:i<17?FRAGEN[i]:'',m:i<17?METH[i%5]:'',aus:(i%6===1&&i<17)?'Mi Vormittag, Interview':'',coach:i<17?COACHES[i%6]:''}));
+const TOOLS=['Laptop, Kopfhörer','Tennisschläger, Handykamera','Stoppuhr, Schlaf-App','Fragebogen, Notizheft','Thermometer, Massband','Kopfhörer, Liedtexte','Jonglierbälle','Waage, Ernährungstabelle','Lampe, Tagebuch','Notizheft','Wörterbuch, App','Laptop','Pulsuhr','Zeichenblock','Karte, Velo','Gitarre, Notizheft','Traumtagebuch'];
+const FACH=['meine Musiklehrerin','Trainer im Tennisclub','Schulärztin','niemand, ich frage in der Mediothek','Hauswart, Förster','mein Bruder (Musiker)','Zirkusschule Bern','Ernährungsberaterin meiner Mutter','niemand','meine Klassenlehrperson','Austauschschülerin','Fotograf im Quartier','Schwimmlehrer','Comiczeichnerin','Velomechaniker','Bandkollegin','niemand'];
+function showForm(i){const p=PROJ[i];const idx=SUS.indexOf(p.n);const tl=TOOLS[idx%TOOLS.length];const fa=FACH[idx%FACH.length];
+  $('#fmbody').innerHTML=`<div class="fhead"><span class="fico" style="background:var(--teal)">F</span><b>Meine brennende Frage und mein Kurzkonzept</b><small>Antwort von ${p.n} · Klasse 30a · eingereicht Di 1.9., 17:42</small></div>
+   <label>Name <input value="${p.n}" readonly></label><label>Meine endgültige Forschungsfrage <textarea rows="2" readonly>${esc(p.f)}</textarea></label>
+   <label>Mit welcher Technik will ich die Frage bearbeiten? <input value="${p.m}" readonly></label><label>Benötigte Hilfsmittel <input value="${tl}" readonly></label><label>Fachpersonen, die ich kenne <input value="${fa}" readonly></label>
+   <label>Auswärts arbeiten geplant? <input value="${p.aus?'ja, ein Halbtag':'nein'}" readonly></label>
+   ${p.aus?`<div class="req"><small>Begründung</small><textarea rows="3" readonly>${p.n==='Jean Tinguely'?'Mittwochvormittag in der Werkstatt meines Onkels: alte Uhrwerke und Kugellager als Antrieb ausprobieren, ausmessen, fotografieren. Zusammenbau am Nachmittag im 204.':'Mittwochvormittag: Interview mit '+fa+', geht nur vor Ort. Auswertung am Nachmittag in Hofwil.'}</textarea></div>`:''}
+   <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><span style="font-size:11.5px;color:var(--txt3)">Coach: ${p.coach||'noch offen'}</span><button class="fsend" id="fmclose" style="margin:0;background:var(--brand)">Schliessen</button></div>`;
+  $('#fmodal').style.display='grid';$('#fmclose').onclick=()=>{$('#fmodal').style.display='none';};}
+const HALB=['Mo Vormittag','Mo Nachmittag','Di Vormittag','Di Nachmittag','Mi Vormittag','Mi Nachmittag','Do Vormittag','Do Nachmittag','Fr Vormittag (Einblick)'];
+let PRAES=[{a:['FRC','MOM','ARH'],e:'ARH',s:'FRC'},{a:['FRC','KEE'],e:'',s:'KEE'},{a:['MOM','FEA'],e:'MOM',s:'FEA'},{a:['FEA'],e:'',s:''},{a:['ARH','KEE'],e:'KEE',s:'ARH'},{a:['ARH','MOM'],e:'',s:'MOM'},{a:['FRC','FEA','KEE'],e:'FRC',s:'FEA'},{a:['MOM'],e:'',s:''},{a:['FRC','ARH','FEA','KEE','MOM'],e:'FRC',s:'FRC'}];
+let MELD=[{n:'Paul Klee',art:'auswärts',wann:'Di 09:00 bis 12:00',grund:'Interview im Tennisclub',coach:'DL',st:'abgesprochen'},{n:'Tove Jansson',art:'abwesend',wann:'Mi ganzer Tag',grund:'krank',coach:'MOM',st:'gemeldet'},{n:'Cuno Amiet',art:'auswärts',wann:'Do Nachmittag',grund:'Messung im Wald Zollikofen',coach:'FEA',st:'offen'}];
+let BOOK={type:0,slots:{}};
+
+const CH={
+  'Allgemein':{open:true,tabs:['Beiträge','Brennende Frage','Termine buchen','Einblick Freitag']},
+  'Organisation SOL':{open:false,tabs:['Beiträge','Einteilung']},
+  'Coaches 30a':{open:false,tabs:['Beiträge','Präsenz LP','Projekte','Präsenz Lernende']},
+};
+
+/* ---------- Stationen ---------- */
+const ST=[
+  {d:'Ende Juni',t:'Pensum und Einteilung',q:'Wer ist in welcher Coach-Gruppe?',
+   go:{ch:'Organisation SOL',tab:'Einteilung'},hl:'#eint',
+   old:`Die Organisation fragt per Mail nach dem Anstellungsgrad, wir antworten mit «X %». Anfang August kommt die Einteilung als PDF im Anhang.`,
+   obs:'Beobachtet dieses Jahr: eine Mail an 22 Personen, 22 Antworten, ein PDF.',
+   neu:`Eine Formularfrage statt Antwortmail. Die Einteilung liegt als Liste im Kanal «Organisation SOL» und ist jederzeit auffindbar.`},
+  {d:'August',t:'Präsenz und Verantwortung',q:'Wer ist wann da, und wer macht den Einstieg?',
+   go:{ch:'Coaches 30a',tab:'Präsenz LP'},hl:'#praes',
+   old:`Jemand aus der Gruppe schickt eine Tabelle, alle tragen sich ein und schreiben kurz an alle. Die Koordinatorin oder der Koordinator macht einen Vorschlag, wir bestätigen per Mail. Wer den Tageseinstieg und den Abschluss übernimmt, klären wir meist am Tag selbst.`,
+   obs:'Beobachtet dieses Jahr: 13 Mails in einem Thread an je fünf bis sechs Personen.',
+   neu:`Eine Tabelle, die alle sehen. Jede und jeder trägt sich selbst ein, auch für Einstieg und Abschluss. Keine Mails, kein Abgleich.`},
+  {d:'bis 2. September',t:'Fragen einreichen, Coaches zuteilen',q:'Wer hat eingereicht, und wer betreut wen?',
+   go:{ch:'Allgemein',tab:'Brennende Frage'},hl:'#formsbox',
+   old:`Die Lernenden speichern ihre Vorlage unter «Nachname_Vorname_Frage.pdf» und laden sie in den Drive-Ordner. Die Organisation vergleicht mit der Klassenliste, die Koordination fordert Fehlendes nach. Die Betreuung tragen wir in ein Google-Dokument oder eine Excel-Tabelle ein, die per Mail kreist.`,
+   obs:'Beobachtet dieses Jahr: sechs Mails allein zu fehlenden Konzepten; die Betreuungstabelle kreiste als Anhang.',
+   neu:`Die Lernenden füllen ein kurzes Formular aus. Jede Antwort ist eine Zeile in der Tabelle der Coaches, ohne Dateinamen und ohne Ordner. Daneben tragen die Coaches ein, wer wen betreut. Probiere «Senden» und schau dann unter «Coaches 30a» im Reiter «Projekte».`},
+  {d:'Woche 37',t:'Klasse informieren, Termine buchen',q:'Wann und wo geht es los, und wann sehe ich meinen Coach?',
+   go:{ch:'Allgemein',tab:'Beiträge'},hl:'#info',
+   old:`Startzeit, Zimmer und die Regel fürs auswärts Arbeiten stehen in drei Mails an die Coaches; die Klasse erfährt es in der Klassenstunde. Am Montag fragen trotzdem einige. Die Gesprächstermine vereinbart jeder Coach auf seine Art: Papierliste, Mail, eigener Buchungslink.`,
+   obs:'Beobachtet dieses Jahr: die Frage «Start um 8:05 oder 8:30?» ging durch vier Mails.',
+   neu:`Ein Beitrag, den Lernende und Coaches gleich sehen. Termine buchen die Lernenden selbst; der Termin steht bei beiden im Kalender.`},
+  {d:'Montag bis Donnerstag',t:'Wer ist wo',q:'Fehlt jemand, oder ist es abgesprochen?',
+   go:{ch:'Coaches 30a',tab:'Präsenz Lernende'},hl:'#meld',
+   old:`Wer auswärts arbeiten will, fragt seinen Coach, meist mündlich, oft am Montagmorgen. Wer krank ist, mailt der Klassenlehrperson und dem Coach. Die anderen Coaches im Zimmer wissen dann nicht, ob eine Abwesenheit abgesprochen ist.`,
+   obs:'Beobachtet in mehreren Jahren, nicht nur in diesem.',
+   neu:`Die Lernenden melden auswärts oder abwesend mit zwei Zeilen; der Coach setzt «abgesprochen». Wer gerade da ist, sieht mit einem Blick, wer wo ist und was geklärt ist.`},
+  {d:'Freitag',t:'Einblick',q:'Wer präsentiert wann und wo?',
+   go:{ch:'Allgemein',tab:'Einblick Freitag'},hl:'#plan',
+   old:`Den Präsentationsplan machen wir am Freitagmorgen im Zimmer, auf Papier oder an der Tafel.`,
+   obs:'',
+   neu:`Der Plan steht am Donnerstagabend im Kanal, die Lernenden sehen ihn auf dem Handy.`},
+];
+
+/* ---------- Zustand ---------- */
+let S={ch:'Allgemein',tab:'Beiträge',st:null,sent:false,msent:false,aus:'ja',fk:'',fc:'',bkview:'sus'};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const link=(cls,ab,txt,go)=>`<span class="lc" ${go?`data-go="${go}"`:''}><span class="i ${cls}">${ab}</span>${txt}</span>`;
+const post=o=>`<div class="post ${o.cls||''}" ${o.id?`id="${o.id}"`:''}><div class="ph"><div class="avatar" title="${o.full||o.name}">${o.av}</div><div class="meta"><b>${o.name}</b>${o.pill?`<span class="pill">${o.pill}</span>`:''}<span class="when">${o.when}</span></div></div><div class="pb">${o.body}</div>${o.foot?`<div class="pr">${o.foot}</div>`:''}${(o.replies||[]).map(r=>`<div class="reply"><div class="avatar s ${r.st?'st':''}">${r.av}</div><div><b>${r.name}</b> <span class="who">${r.when}</span><br>${r.txt}</div></div>`).join('')}</div>`;
+const compose=`<div class="compose"><button>✎ In Kanal posten</button></div>`;
+
+/* ---------- Rendering ---------- */
+function renderPanel(){
+  $('#panel').innerHTML=`<div class="teamhead"><div class="tlogo">SOL</div><div class="tname">SOL-Woche 2027</div><div class="tsub">nur für die Intensivwoche 38 · Lernende AK 30 und Coaches</div></div>
+    <div class="grp"><div class="gh">Kanäle</div>${Object.entries(CH).map(([c,v])=>`<div class="ch ${c===S.ch?'active':''}" data-ch="${c}">${c}${v.open?'':'<span class="lock" title="nur für Coaches">🔒</span>'}</div>`).join('')}
+    ${['30b','30c','30d','30e'].map(k=>`<div class="ch dim" title="in dieser Nachbildung nicht ausgeführt">Coaches ${k} <span class="lock">🔒</span></div>`).join('')}</div>
+    <div class="panel-foot">«Allgemein» sehen alle, auch die Lernenden. Kanäle mit Schloss sehen nur die Coaches. Nach der SOL-Woche wird der Bereich archiviert.</div>`;
+  document.querySelectorAll('.ch[data-ch]').forEach(el=>el.onclick=()=>{S.ch=el.dataset.ch;S.tab='Beiträge';render();});
+}
+function renderHead(){
+  $('#chanhead').innerHTML=`<span class="cicon">${S.ch==='Allgemein'?'SOL':'#'}</span><span class="cname">${S.ch}</span><div id="tabs">${CH[S.ch].tabs.map(t=>`<button class="tab ${t===S.tab?'active':''}" data-tab="${t}">${t}</button>`).join('')}<button class="tab plus">+</button></div><div class="actions"><span class="meet">▢ Jetzt besprechen ▾</span><span>⌕</span><span>···</span></div>`;
+  document.querySelectorAll('.tab[data-tab]').forEach(el=>el.onclick=()=>{S.tab=el.dataset.tab;render();});
+}
+function renderContent(){
+  const c=$('#content');c.scrollTop=0;
+  const V={'Beiträge':viewPosts,'Brennende Frage':viewForm,'Termine buchen':viewBook,'Einblick Freitag':viewPlan,'Einteilung':viewEint,'Präsenz LP':viewPraes,'Projekte':viewProj,'Präsenz Lernende':viewMeld};
+  c.innerHTML=(V[S.tab]||(()=>'<div class="list"><div class="note">Nur angedeutet.</div></div>'))();
+  bind();
+}
+function viewPosts(){
+  if(S.ch==='Allgemein') return `<div class="posts">
+    <div class="post ann" id="info"><div class="banner">SOL-Woche: Start am Montag, 14. September</div><div class="sub">Angepinnt · Célestin Freinet, Koordination 30a · für die Klasse 30a</div>
+      <div class="pb"><b>Start:</b> Montag 8:30 im Zimmer 201. <b>Täglich:</b> 8:30 Tageseinstieg, 15:30 Abschluss im Zimmer, dazwischen frei eingeteilt. Pausen individuell. <b>Freitag:</b> 9:00 Einblick in die Projekte, 11:30 Schluss.<br><b>Dienstag 13:00:</b> Input «Lernen und Lernstrategien» in der Aula, für alle.<br><b>Auswärts arbeiten:</b> bis zu einem Halbtag, wenn es das Projekt braucht (Interview, Besichtigung, Messung). Bitte vorher melden, Ihr Coach bestätigt.<br>${link('fo','F','Brennende Frage und Kurzkonzept einreichen','Allgemein|Brennende Frage')}${link('bk','B','Termine mit dem Coach buchen','Allgemein|Termine buchen')}${link('li','L','Einblick am Freitag: Plan','Allgemein|Einblick Freitag')}</div>
+      <div class="pr">👍 24 &nbsp; ↩ 2 Antworten</div>
+      <div class="reply"><div class="avatar s st">MO</div><div><b>Meret Oppenheim</b> <span class="who">Mi 16:40</span><br>Gilt die Meldung auch, wenn ich nur am Mittwoch zwei Stunden ins Stadtarchiv will?</div></div>
+      <div class="reply"><div class="avatar s">CF</div><div><b>Célestin Freinet</b> <span class="who">Mi 16:52</span><br>Ja, genau dafür. Zwei Zeilen reichen, Ihr Coach bestätigt es dann.</div></div>
+    </div>
+    ${post({av:'KH',name:'Kurt Hahn',full:NAMES.HAK,pill:'Organisation',when:'Fr 4.9.',body:'Liebe AK 30, fast alle Fragen sind eingereicht, danke. Wer noch nicht dran war: der Link ist oben im angepinnten Beitrag. Bis Montag!',foot:'👍 31'})}
+    ${compose}</div>`;
+  if(S.ch==='Organisation SOL') return `<div class="posts">
+    ${post({av:'KH',name:'Kurt Hahn',full:NAMES.HAK,pill:'Organisation',when:'Mo 3.8.',body:`<h4>Einteilung Coaches SOL-Woche 2027</h4>Danke für die Pensumangaben, alle sind drin. Die Einteilung steht im Reiter «Einteilung», die Koordination je Klasse ist markiert. Bitte teilt die neun Halbtage im eigenen Kanal auf.<br>${link('li','L','Einteilung','Organisation SOL|Einteilung')}`,foot:'👍 18'})}
+    ${post({av:'KH',name:'Kurt Hahn',full:NAMES.HAK,pill:'Organisation',when:'Sa 29.8.',body:`<h4>FAQ und Raumbelegung</h4>Eigene Frage pro Person, keine Ja-Nein-Fragen. Auswärts bis zu einem Halbtag, die Coaches entscheiden. Räume: 30a 201, 204, 206; 30b Cabane; 30c Pavillon; 30d 107 bis 112; 30e Wankdorffeldstrasse. Dienstag Input in der Aula, für die Lernenden obligatorisch.`,foot:'👍 15 &nbsp; ↩ 2 Antworten',replies:[{av:'EK',name:'Ellen Key',when:'Sa 14:10',txt:'Zwei Lernende möchten dasselbe Thema, mit je eigener Frage. Geht das?'},{av:'KH',name:'Kurt Hahn',when:'Sa 15:02',txt:'Ja, wenn die Fragen wirklich verschieden sind. Steht jetzt auch oben im FAQ.'}]})}
+    ${compose}</div>`;
+  return `<div class="posts">
+    ${post({av:'CF',name:'Célestin Freinet',full:NAMES.FRC,pill:'Koordination',when:'Mo 7.9.',body:`<h4>Vor der Woche</h4>Präsenz ist komplett, danke. Am Montag treffen wir uns im 201. Projekte sind zugeteilt; wer noch nicht eingereicht hat, habe ich im Kanal «Allgemein» erwähnt.<br>${link('li','L','Präsenz LP','Coaches 30a|Präsenz LP')}${link('xl','X','Projekte','Coaches 30a|Projekte')}${link('li','L','Präsenz Lernende','Coaches 30a|Präsenz Lernende')}`,foot:'👍 5 &nbsp; ↩ 2 Antworten',replies:[{av:'HA',name:'Hannah Arendt',when:'Mo 17:30',txt:'Die Forschungsbücher liegen im 201 auf dem Pult.'},{av:'AF',name:'Adolphe Ferrière',when:'Di 08:02',txt:'Ich mache am Dienstag den Einstieg, steht in der Präsenzliste.'}]})}
+    ${compose}</div>`;
+}
+function viewEint(){
+  return `<div class="list" id="eint"><div class="cmdbar"><span class="b primary">＋ Neu</span><span class="b">Nach Klasse filtern: <select id="fk"><option value="">alle</option>${GRUPPEN.map(g=>`<option ${S.fk===g[0]?'selected':''}>${g[0]}</option>`).join('')}</select></span></div>
+    <table class="sl"><thead><tr><th>Klasse</th><th>Coaches</th><th>Koordination</th><th>Räume</th></tr></thead><tbody>
+    ${GRUPPEN.filter(g=>!S.fk||g[0]===S.fk).map(g=>`<tr ${g[0]==='30a'?'class="hlrow"':''}><td><b>${g[0]}</b></td><td>${g[1].map(kz).join('')}</td><td><span class="tag chef" title="${NAMES[g[1][0]]}">${g[1][0]}</span></td><td>${g[2]}</td></tr>`).join('')}</tbody></table>
+    <div class="note" style="margin-top:12px">Mit der Maus über ein Kürzel: der Name erscheint. Die Pensumabfrage davor ist eine Formularfrage; die Antworten landen direkt bei der Organisation.</div></div>`;
+}
+function viewPraes(){
+  return `<div class="list" id="praes"><div class="cmdbar"><span class="b primary">＋ Neu</span><span class="b">Bearbeiten in Rasteransicht</span><span class="sp"></span><span class="stat">Einstieg 8:30 · Abschluss 15:30</span></div>
+    <table class="sl"><thead><tr><th>Halbtag</th><th>Anwesend</th><th>Tageseinstieg</th><th>Tagesabschluss</th></tr></thead><tbody>
+    ${HALB.map((h,i)=>{const p=PRAES[i];const low=p.a.length<2;const vm=i%2===0;const nm=i%2===1||i===8;return `<tr><td><b>${h}</b></td><td>${p.a.map(kz).join('')}${p.a.includes('DL')?'':`<button class="addme" data-add="${i}">+ ich</button>`}</td><td>${vm?(p.e?kz(p.e):`<button class="addme" data-e="${i}">+ ich</button>`):'<span style="color:var(--txt3)">—</span>'}</td><td>${nm?(p.s?kz(p.s):`<button class="addme" data-s="${i}">+ ich</button>`):'<span style="color:var(--txt3)">—</span>'}</td></tr>`}).join('')}</tbody></table>
+    <div class="note" style="margin-top:12px">Alle tragen sich selbst ein, alle sehen dasselbe.</div></div>`;
+}
+function viewProj(){
+  const miss=PROJ.filter(p=>!p.f).length;
+  return `<div class="list" id="proj"><div class="cmdbar"><span class="b"><span class="fico" style="background:#107c41">X</span>&nbsp;Brennende Fragen 30a.xlsx</span><span class="b">Nach Coach filtern: <select id="fc"><option value="">alle</option>${COACHES.map(c=>`<option ${S.fc===c?'selected':''}>${c}</option>`).join('')}</select></span><span class="sp"></span><span class="stat">${PROJ.length-miss} Antworten</span></div>
+    <table class="sl"><thead><tr><th>Lernende/r</th><th>Brennende Frage</th><th>Methode</th><th>Auswärts</th><th>Coach</th></tr></thead><tbody>
+    ${PROJ.map((p,i)=>({p,i})).filter(({p})=>p.f&&(!S.fc||p.coach===S.fc)).map(({p,i})=>`<tr ${p.new?'class="hlrow"':''}><td>${p.n}</td><td>${p.f?`<a href="#" data-form="${i}">${esc(p.f)}</a>`:'<span class="tag miss">noch nicht eingereicht</span>'}</td><td>${p.m||''}</td><td>${p.aus?`<span class="tag amb">${p.aus}</span>`:''}</td><td><select data-coach="${i}"><option value="">—</option>${COACHES.map(c=>`<option ${c===p.coach?'selected':''} title="${NAMES[c]}">${c}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table>
+    <div class="note" style="margin-top:12px">Auf eine brennende Frage klicken: das ausgefüllte Formular öffnet sich. Die Spalte «Coach» ersetzt die Betreuungstabelle.</div></div>`;
+}
+function viewForm(){
+  return `<div class="list"><div class="two" id="formsbox"><div class="fcol"><div class="fhead"><span class="fico" style="background:var(--teal)">F</span><b>Meine brennende Frage und mein Kurzkonzept</b><small>Klasse 30a · Abgabe bis Mittwoch, 2. September, 12:00</small></div>
+    ${S.sent?`<div class="fok">✓ Danke, eingereicht. Ihr Coach sieht Ihre Frage ab jetzt in seiner Tabelle. Falls Sie etwas ändern möchten: einfach nochmals einreichen, die letzte Antwort zählt.</div>`:`
+    <label>Name <input value="Jean Tinguely"></label>
+    <label>Meine endgültige Forschungsfrage <textarea rows="2">Wie baue ich eine kinetische Skulptur, die sich ohne Motor bewegt?</textarea></label>
+    <label>Mit welcher Technik will ich die Frage bearbeiten? <select><option>Experiment</option><option>Interview</option><option>Literatur</option><option>Umfrage</option><option>Beobachtung</option></select></label>
+    <label>Benötigte Hilfsmittel <input value="Werkraum, Draht, Holzreste"></label>
+    <label>Fachpersonen, die ich kenne <input value="Mein Onkel, Schlosser in Bern"></label>
+    <label>Auswärts arbeiten geplant? <select id="ausw"><option ${S.aus==='ja'?'selected':''}>ja, ein Halbtag</option><option ${S.aus==='nein'?'selected':''}>nein</option></select></label>
+    ${S.aus==='ja'?`<div class="req"><small>Begründen Sie bitte genau: Was tun Sie dort, das sich in Hofwil nicht tun lässt? Wann, wo, mit wem? Ihr Coach entscheidet aufgrund dieser Angaben.</small><textarea rows="4">Mittwochvormittag, 9 bis 12 Uhr, in der Werkstatt meines Onkels in Bern-Bümpliz. Er sammelt alte Uhrwerke und Kugellager; ich möchte drei davon als Antrieb ausprobieren, ausmessen und fotografieren, weil ich sie nur dort in die Hand nehmen kann. Die Skizze bringe ich von Hofwil mit, den Zusammenbau mache ich am Nachmittag wieder im 204.</textarea></div>`:''}
+    <button id="fsend" class="fsend">Senden</button>`}
+    </div>
+    <div class="fcol"><div class="fhead"><span class="fico" style="background:#107c41">X</span><b>Was bei den Coaches ankommt</b><small>Tabelle im geschlossenen Kanal «Coaches 30a», eine Zeile pro Antwort</small></div>
+    <table class="sl" style="font-size:12px"><thead><tr><th>Lernende/r</th><th>Brennende Frage</th><th>Auswärts</th><th>Coach</th></tr></thead><tbody>
+    ${PROJ.slice(12).filter(p=>p.f).map(p=>`<tr ${p.new?'class="hlrow"':''}><td>${p.n}</td><td>${p.f?`<a href="#" data-form="${PROJ.indexOf(p)}">${esc(p.f).slice(0,44)+(p.f.length>44?'…':'')}</a>`:'<span class="tag miss">fehlt</span>'}</td><td>${p.aus?'<span class="tag amb">ja</span>':''}</td><td>${p.coach||'—'}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+}
+function viewBook(){
+  const T=[['Betreuungsgespräch 1','15 Min. · Standortbestimmung'],['Betreuungsgespräch 2','15 Min. · Zwischenstand'],['Reflexionsgespräch','10 Min. · Rückblick']];
+  const days=['Montag','Dienstag','Mittwoch','Donnerstag'];const slots=['09:15','10:00','10:45','13:15','14:00','14:45'];
+  const taken={'0-0':['Betreuungsgespräch 1','Niki de Saint Phalle'],'0-2':['Betreuungsgespräch 1','Ferdinand Hodler'],'1-1':['Betreuungsgespräch 1','Cuno Amiet'],'1-4':['Betreuungsgespräch 2','Niki de Saint Phalle'],'2-0':['Betreuungsgespräch 2','Ferdinand Hodler'],'2-3':['Betreuungsgespräch 2','Cuno Amiet'],'3-2':['Reflexionsgespräch','Niki de Saint Phalle'],'3-5':['Reflexionsgespräch','Ferdinand Hodler']};
+  const sw=`<span style="font-size:12px;color:var(--txt2)">Ansicht:</span> <button class="tag ${S.bkview==='sus'?'ok':''}" data-bv="sus" style="cursor:pointer">Lernende</button><button class="tag ${S.bkview==='coach'?'ok':''}" data-bv="coach" style="cursor:pointer">Coach (DL)</button>`;
+  if(S.bkview==='coach'){
+    const mine=Object.entries(BOOK.slots);
+    return `<div class="list"><div class="cmdbar"><b style="font-size:15px">Mein Kalender, Woche 38</b><span class="sp"></span>${sw}</div>
+      <div class="note">Was bei Ihnen als Coach ankommt: jede Buchung ist ein Termin im eigenen Kalender, mit Name und Gesprächsart. Verschiebt eine Lernende, verschiebt sich der Termin bei beiden.</div>
+      <div class="bk" style="grid-template-columns:1fr"><div class="days">${days.map((d,di)=>`<div class="day"><b>${d}</b>${slots.map((s,si)=>{const k=di+'-'+si;const t=taken[k];const m=mine.find(([ty,sl])=>sl===d+' '+s);return m?`<div class="slot mine" style="text-align:left">${s} · ${T[m[0]][0]}<br><small>Jean Tinguely</small></div>`:t?`<div class="slot" style="text-align:left;background:#eef0fb;border-color:#c7c9ee;cursor:default">${s} · ${t[0]}<br><small>${t[1]}</small></div>`:`<div class="slot taken">${s} · frei</div>`}).join('')}</div>`).join('')}</div></div></div>`;
+  }
+  return `<div class="list"><div class="cmdbar"><span></span><span class="sp"></span>${sw}</div><div class="note">Buchungsseite Ihres Coaches. Wählen Sie die Gesprächsart und eine freie Zeit; der Termin steht danach bei Ihnen und beim Coach im Kalender und lässt sich verschieben.</div>
+    <div class="bk" id="book"><div class="types">${T.map((t,i)=>`<div class="${BOOK.type===i?'on':''}" data-type="${i}"><b>${t[0]}</b><small>${t[1]}</small>${BOOK.slots[i]?`<small style="color:var(--ok)">✓ ${BOOK.slots[i]}</small>`:''}</div>`).join('')}<div style="border:0;background:none;padding:0;font-size:11.5px;color:var(--txt3)">Coach: DL · Zimmer 204 · Sie: Jean Tinguely</div></div>
+    <div class="days">${days.map((d,di)=>`<div class="day"><b>${d}</b>${slots.map((s,si)=>{const k=di+'-'+si;const mine=Object.values(BOOK.slots).includes(d+' '+s);return `<div class="slot ${taken[k]?'taken':''} ${mine?'mine':''}" data-slot="${d} ${s}">${s}${mine?' ✓':''}</div>`}).join('')}</div>`).join('')}</div></div></div>`;
+}
+function viewMeld(){
+  return `<div class="list" id="meld"><div class="cmdbar"><span class="b">Heute ▾</span><span class="b">Alle Coaches</span></div>
+    <table class="sl"><thead><tr><th>Lernende/r</th><th>Was</th><th>Wann</th><th>Grund</th><th>Coach</th><th>Status</th></tr></thead><tbody>
+    ${MELD.map((m,i)=>`<tr ${m.new?'class="hlrow"':''}><td>${m.n}</td><td>${m.art}</td><td>${m.wann}</td><td>${esc(m.grund)}</td><td>${kz(m.coach)}</td><td>${m.st==='abgesprochen'?'<span class="tag ok">abgesprochen</span>':m.st==='gemeldet'?'<span class="tag">gemeldet, KL informiert</span>':`<span class="tag amb">offen</span> <button class="addme" data-ok="${i}">abgesprochen ✓</button>`}</td></tr>`).join('')}</tbody></table>
+    <div class="two" style="margin-top:14px;grid-template-columns:1fr 1fr"><div class="fcol"><div class="fhead"><span class="fico" style="background:var(--teal)">F</span><b>So melden es die Lernenden</b><small>Formular im Kanal «Allgemein», die Meldung landet direkt in dieser Liste</small></div>
+    ${S.msent?`<div class="fok">✓ Gemeldet. Ihr Coach sieht es und bestätigt.</div>`:`<label>Name <input value="Ella Maillart"></label><label>Was <select><option>auswärts arbeiten</option><option>abwesend (krank, Arzt)</option></select></label><label>Wann <input value="Mi 13:15 bis 15:30"></label><label>Wozu <input value="Umfrage am Bahnhof Münchenbuchsee"></label><label>Mein Coach <select><option>DL</option><option>FRC</option><option>MOM</option></select></label><button id="msend" class="fsend">Senden</button>`}</div><div></div></div></div>`;
+}
+function viewPlan(){
+  const G=[['Gruppe 1 · Zimmer 201 · Coach FRC',['Meret Oppenheim','Paul Klee','Käthe Kollwitz','Johannes Itten','Alberto Giacometti']],['Gruppe 2 · Zimmer 204 · Coach DL',['Niki de Saint Phalle','Ferdinand Hodler','Cuno Amiet','Tove Jansson','Selma Lagerlöf']],['Gruppe 3 · Zimmer 206 · Coach ARH',['Erich Kästner','Friedrich Glauser','Annemarie Schwarzenbach','Alice Bailly','Max Frisch']],['Gruppe 4 · Zimmer 201 (ab 10:30) · Coach MOM',['Anna Seghers','Ella Maillart','Hermann Hesse','Mariella Mehr','Jean Tinguely']]];
+  return `<div class="list" id="plan"><div class="note">Freitag 9:00 bis 11:30. Je drei Präsentationen, kurze Diskussion, Pause, weiter.</div>
+    <div class="two" style="grid-template-columns:1fr 1fr">${G.map(g=>`<div class="fcol"><div class="fhead"><b>${g[0]}</b></div><table class="sl" style="font-size:12.5px"><tbody>${g[1].map((n,i)=>`<tr><td style="width:60px;color:var(--txt3)">${['9:05','9:20','9:35','10:05','10:20'][i]}</td><td>${n}</td></tr>`).join('')}</tbody></table></div>`).join('')}</div></div>`;
+}
+
+function bind(){
+  document.querySelectorAll('[data-form]').forEach(a=>a.onclick=e=>{e.preventDefault();showForm(+a.dataset.form);});
+  const fk=$('#fk');if(fk)fk.onchange=()=>{S.fk=fk.value;render();};
+  const fc=$('#fc');if(fc)fc.onchange=()=>{S.fc=fc.value;render();};
+  document.querySelectorAll('[data-bv]').forEach(b=>b.onclick=()=>{S.bkview=b.dataset.bv;render();});
+  document.querySelectorAll('[data-go]').forEach(el=>el.onclick=()=>{const [c,t]=el.dataset.go.split('|');S.ch=c;S.tab=t;render();});
+  document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{PRAES[+b.dataset.add].a.push('DL');render();});
+  document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{PRAES[+b.dataset.e].e='DL';render();});
+  document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{PRAES[+b.dataset.s].s='DL';render();});
+  document.querySelectorAll('[data-coach]').forEach(s=>s.onchange=()=>{PROJ[+s.dataset.coach].coach=s.value;});
+  document.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>{MELD[+b.dataset.ok].st='abgesprochen';render();});
+  const a=$('#ausw');if(a)a.onchange=()=>{S.aus=a.value.startsWith('ja')?'ja':'nein';render();};
+  const f=$('#fsend');if(f)f.onclick=()=>{S.sent=true;const p=PROJ.find(x=>x.n==='Jean Tinguely');p.f='Wie baue ich eine kinetische Skulptur, die sich ohne Motor bewegt?';p.m='Experiment';p.aus=S.aus==='ja'?'Mi Vormittag, Werkstatt':'';p.new=true;render();};
+  const m=$('#msend');if(m)m.onclick=()=>{S.msent=true;MELD.push({n:'Ella Maillart',art:'auswärts',wann:'Mi 13:15 bis 15:30',grund:'Umfrage am Bahnhof Münchenbuchsee',coach:'DL',st:'offen',new:true});render();};
+  document.querySelectorAll('[data-type]').forEach(d=>d.onclick=()=>{BOOK.type=+d.dataset.type;render();});
+  document.querySelectorAll('.slot:not(.taken)').forEach(s=>s.onclick=()=>{BOOK.slots[BOOK.type]=s.dataset.slot;if(BOOK.type<2)BOOK.type++;render();});
+}
+function render(){renderPanel();renderHead();renderContent();}
+
+/* ---------- Stationen ---------- */
+function renderTL(){
+  $('#tl').innerHTML=ST.map((s,i)=>`<button class="st ${S.st===i?'active':''}" data-i="${i}"><small>${i+1} · ${s.d}</small><b>${s.t}</b></button>`).join('');
+  document.querySelectorAll('.st').forEach(el=>el.onclick=()=>runSt(+el.dataset.i));
+}
+function runSt(i){
+  const s=ST[i];S.st=i;S.ch=s.go.ch;S.tab=s.go.tab;render();renderTL();
+  document.querySelectorAll('.demo-highlight').forEach(e=>e.classList.remove('demo-highlight'));
+  const el=$(s.hl);if(el){el.classList.add('demo-highlight');setTimeout(()=>el.scrollIntoView({block:'center',behavior:'smooth'}),50);}
+  const c=$('#cmp');c.classList.add('show');
+  c.innerHTML=`<div class="q"><span><span class="sub">Station ${i+1} · ${s.d}</span>${s.q}</span><button id="cmpx" title="Schliessen und selbst weiterklicken">✕</button></div>
+    <div class="cols"><div class="col"><h5>Bisher</h5><p>${s.old}</p>${s.obs?`<div class="obs">${s.obs}</div>`:''}</div><div class="col"><h5>So könnte es gehen</h5><p>${s.neu}</p></div></div>
+    <div class="foot"><span>${i+1} von ${ST.length} · Mit ✕ schliessen und selbst herumklicken</span><span style="display:flex;gap:6px">${i>0?`<button class="nextbtn sec" id="cmpp">‹ Zurück</button>`:''}${i<ST.length-1?`<button class="nextbtn" id="cmpn">Weiter ›</button>`:`<button class="nextbtn" id="cmpn2">Fertig</button>`}</span></div>`;
+  $('#cmpx').onclick=()=>{c.classList.remove('show');S.st=null;renderTL();};
+  const p=$('#cmpp');if(p)p.onclick=()=>runSt(i-1);
+  const n=$('#cmpn');if(n)n.onclick=()=>runSt(i+1);
+  const n2=$('#cmpn2');if(n2)n2.onclick=()=>{c.classList.remove('show');S.st=null;renderTL();};
+}
+$('#reset').onclick=()=>{location.reload();};
+$('#introBtn').onclick=()=>{$('#intro').style.display='none';runSt(0);};
+$('#introFree').onclick=()=>{$('#intro').style.display='none';};
+render();renderTL();
+</script>
+</body>
+</html>
