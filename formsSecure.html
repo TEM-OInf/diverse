@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prüfung</title>
+<style>
+  html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; background: #f3f3f3; }
+  body { display: flex; flex-direction: column; }
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 8px 16px; background: #fff; border-bottom: 1px solid #ddd;
+  }
+  header h1 { font-size: 16px; margin: 0; }
+  #status { font-size: 13px; color: #666; }
+  #status.ok { color: #1a7f37; }
+  #status.fail { color: #b42318; }
+  iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+  footer { padding: 10px 16px; background: #fff; border-top: 1px solid #ddd; display: flex; gap: 16px; align-items: center; }
+  button, a.btn {
+    font-size: 15px; padding: 10px 18px; border: 0; border-radius: 6px;
+    background: #0f6cbd; color: #fff; cursor: pointer; text-decoration: none; display: inline-block;
+  }
+  button:disabled { background: #999; cursor: not-allowed; }
+  footer p { margin: 0; font-size: 13px; color: #555; }
+  #start { display: none; max-width: 640px; margin: 60px auto; padding: 32px; background: #fff; border-radius: 8px; }
+  #start h2 { margin-top: 0; }
+  #start code { display: block; margin-top: 16px; padding: 8px; background: #f3f3f3; font-size: 12px; word-break: break-all; }
+  #exam { display: none; flex: 1; flex-direction: column; }
+  #diag { font-size: 11px; color: #888; padding: 4px 16px; background: #fafafa; border-top: 1px solid #eee; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<!-- Ansicht 1: im normalen Browser -->
+<div id="start">
+  <h2 id="startTitle">Prüfung</h2>
+  <p>Diese Prüfung läuft im gesicherten Windows-Prüfungsmodus (Take a Test).
+     Schliesse alle anderen Programme und Browserfenster, dann starte:</p>
+  <a id="secureLink" class="btn" href="#">Prüfung im gesicherten Modus starten</a>
+  <p style="margin-top:24px;font-size:13px;color:#555">
+     Falls Windows fragt, ob «Take a Test» geöffnet werden darf: bestätigen.
+     Nach dem Absenden: Knopf «Prüfung beenden» drücken.</p>
+  <code id="linkText"></code>
+</div>
+
+<!-- Ansicht 2: innerhalb von Take a Test -->
+<div id="exam">
+  <header>
+    <h1 id="examTitle">Prüfung</h1>
+    <span id="status"></span>
+  </header>
+  <iframe id="form" allowfullscreen></iframe>
+  <footer>
+    <button id="endBtn" disabled>Prüfung beenden</button>
+    <p>Zuerst im Formular auf «Absenden» klicken und die Bestätigung abwarten. Erst dann «Prüfung beenden».</p>
+  </footer>
+  <div id="diag"></div>
+</div>
+
+<script>
+  // ===== Hier pro Prüfung anpassen =====
+  var TITLE     = 'Kiosk test';
+  var FORMS_URL = 'https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=yIV0ZMJaJkaENBIf-eXWPNeyP6B8VlJOpeAKamLNSlVUMFNZQ1lMUDQyWEIxMk1LMFY2WkYwSzVFSCQlQCNjPTEu';
+  // =====================================
+
+  document.title = TITLE;
+  document.getElementById('startTitle').textContent = TITLE;
+  document.getElementById('examTitle').textContent  = TITLE;
+
+  var hasApi = (typeof SecureBrowser !== 'undefined') && !!SecureBrowser.security;
+  var examRequested = location.search.indexOf('exam=1') !== -1;
+
+  if (hasApi || examRequested) {
+    // ---- Prüfungsansicht ----
+    document.getElementById('exam').style.display = 'flex';
+    document.getElementById('form').src = FORMS_URL + '&embed=true';
+
+    var status = document.getElementById('status');
+    var btn    = document.getElementById('endBtn');
+    var diag   = document.getElementById('diag');
+
+    // Diagnose: was ist vorhanden?
+    var info = 'typeof SecureBrowser: ' + typeof SecureBrowser;
+    if (hasApi) {
+      var methods = [];
+      for (var k in SecureBrowser.security) { methods.push(k); }
+      info += ' | security: ' + methods.join(', ');
+      try { info += ' | secure: ' + SecureBrowser.security.isEnvironmentSecure(); } catch (e) {}
+    }
+    info += ' | UA: ' + navigator.userAgent;
+    diag.textContent = info;
+
+    if (hasApi) {
+      status.textContent = 'Take-a-Test-API verfügbar';
+      status.className = 'ok';
+      btn.disabled = false;
+      btn.addEventListener('click', function () {
+        if (!confirm('Hast du die Prüfung abgesendet und die Bestätigung gesehen?')) return;
+        try {
+          SecureBrowser.security.close(true);
+        } catch (e) {
+          status.textContent = 'Schliessen fehlgeschlagen: ' + e;
+          status.className = 'fail';
+        }
+      });
+    } else {
+      status.textContent = 'Keine Take-a-Test-API gefunden. Beenden mit Ctrl+Alt+Entf.';
+      status.className = 'fail';
+    }
+  } else {
+    // ---- Startansicht ----
+    var self   = location.origin + location.pathname + '?exam=1';
+    var secure = 'ms-edu-secureassessment:' + self + '#enforceLockdown';
+    document.getElementById('start').style.display = 'block';
+    document.getElementById('secureLink').href = secure;
+    document.getElementById('linkText').textContent = secure;
+  }
+</script>
+
+</body>
+</html>
