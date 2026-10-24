@@ -130,6 +130,20 @@
   .sliderLabels { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); max-width: 560px; }
 
   #conflictBox { font-size: 12.5px; color: var(--red); margin-top: 10px; }
+
+  .subsection { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 14px; }
+  .subsection h3 { font-size: 13.5px; margin: 0 0 4px 0; }
+  .savedList { margin-top: 10px; font-size: 13px; }
+  .savedItem { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eef0f3; flex-wrap: wrap; }
+  .savedItem .meta { color: var(--muted); font-size: 12px; }
+  .savedItem button { padding: 5px 10px; font-size: 12.5px; }
+  button.small { padding: 5px 10px; font-size: 12.5px; }
+  input.wide { width: 220px; }
+  textarea.jsonBox { width: 100%; height: 110px; font-family: Consolas, monospace; font-size: 11.5px; border: 1px solid var(--border); border-radius: 6px; padding: 6px; margin-top: 8px; }
+  #imagePreview img { max-width: 100%; border: 1px solid var(--border); border-radius: 6px; margin-top: 10px; }
+  details summary { cursor: pointer; font-size: 13px; color: var(--accent-dark); margin-top: 10px; }
+  .msg-ok { color: var(--green); }
+  .msg-err { color: var(--red); }
 </style>
 </head>
 <body>
@@ -138,14 +152,27 @@
 
 <div class="panel">
   <h2>1. Daten importieren</h2>
-  <div class="privacy-box">Alle Berechnungen laufen ausschliesslich lokal in diesem Browser auf diesem Computer. Es werden keine Daten in die Cloud, an eine KI oder an einen Server übertragen oder gespeichert.</div>
-  <p class="desc">Adressliste einer Klasse laden oder eine zuvor exportierte Sitzordnung zum Weiterbearbeiten öffnen. Es können nur Adresslisten importiert werden, die direkt aus Evento exportiert wurden (Tabellenblatt "DatenImport").</p>
+  <div class="privacy-box">Alle Berechnungen laufen ausschliesslich lokal auf diesem Computer. Gespeicherte Sitzordnungen bleiben nur in diesem Browser bzw. dieser Teams-App auf diesem Gerät. Es werden keine Daten in die Cloud, an eine KI oder an einen Server übertragen.</div>
+  <p class="desc">Neu beginnen mit einer Adressliste (nur direkt aus Evento exportierte Listen, Tabellenblatt "DatenImport") oder eine gespeicherte Sitzordnung wieder aufnehmen.</p>
   <div class="row">
-    <button id="importBtn">Adressliste oder Sitzordnung importieren</button>
+    <button id="importBtn">Evento-Adressliste importieren</button>
     <input type="file" id="fileInput" accept=".xlsx,.json" style="display:none">
     <span id="importedInfo" class="hint"></span>
   </div>
   <div id="status"></div>
+
+  <div class="subsection">
+    <h3>Gespeicherte Sitzordnungen</h3>
+    <div id="savedList" class="savedList"></div>
+    <details>
+      <summary>Sitzordnung aus kopiertem Text laden (z.B. von einem anderen Gerät oder von einer Kollegin, einem Kollegen)</summary>
+      <textarea id="pasteBox" class="jsonBox" placeholder="Hier den kopierten Text der Sitzordnung einfügen (Ctrl+V)"></textarea>
+      <div class="row" style="margin-top:6px">
+        <button id="pasteLoadBtn" class="small">Aus Text laden</button>
+        <span class="hint">Eine früher heruntergeladene Datei "Sitzordnung.json" kann auch über den Import-Button oben geöffnet werden.</span>
+      </div>
+    </details>
+  </div>
 </div>
 
 <div class="panel" id="wishPanel" style="display:none">
@@ -193,11 +220,36 @@
 </div>
 
 <div class="panel" id="exportPanel" style="display:none">
-  <h2>5. Sichern</h2>
-  <p class="desc">Ergebnis sichern: als Datei, um später weiterzuarbeiten, oder als Bild zum Drucken bzw. Weitergeben.</p>
+  <h2>5. Sichern und weitergeben</h2>
+  <p class="desc">Der aktuelle Stand wird laufend automatisch gesichert und erscheint in Schritt 1 als "Zuletzt bearbeitet". Für mehrere Klassen die Sitzordnung zusätzlich unter einem Namen speichern.</p>
+
   <div class="row">
-    <button id="exportBtn">Sitzordnung als Datei exportieren</button>
-    <button id="exportImageBtn" class="secondary">Gruppen als Bild exportieren</button>
+    <label for="saveName" style="font-size:13px;color:var(--muted)">Name</label>
+    <input type="text" id="saveName" class="wide" value="Sitzordnung">
+    <button id="saveBtn">Im Browser speichern</button>
+    <span id="saveMsg" class="hint"></span>
+  </div>
+
+  <div class="subsection">
+    <h3>Bild für die Klasse</h3>
+    <p class="desc">Neutrales Bild der Gruppen (ohne Markierungen). Kopiert lässt es sich direkt in einen Teams-Chat, eine OneNote-Seite oder eine Präsentation einfügen (Ctrl+V).</p>
+    <div class="row">
+      <button id="imageBtn">Bild erzeugen und kopieren</button>
+      <span id="imageMsg" class="hint"></span>
+    </div>
+    <div id="imagePreview"></div>
+  </div>
+
+  <div class="subsection">
+    <h3>Sitzordnung weitergeben oder auf ein anderes Gerät übertragen</h3>
+    <p class="desc">Kopiert die komplette Sitzordnung als Text. Diesen Text z.B. in einen Teams-Chat an sich selbst oder an eine Kollegin, einen Kollegen einfügen; dort in Schritt 1 über "Sitzordnung aus kopiertem Text laden" wieder öffnen.</p>
+    <div class="row">
+      <button id="copyJsonBtn" class="secondary">Sitzordnung als Text kopieren</button>
+      <button id="exportBtn" class="secondary">Als Datei herunterladen</button>
+      <span id="copyMsg" class="hint"></span>
+    </div>
+    <div id="exportStatus" class="hint"></div>
+    <textarea id="jsonFallback" class="jsonBox" style="display:none" readonly></textarea>
   </div>
 </div>
 
@@ -210,6 +262,7 @@ let mode = null;          // null | 'green' | 'red'
 let selectedId = null;
 let seenSignatures = new Set();
 let nextId = 1;
+let className = '';       // Klassenbezeichnung aus Evento (z.B. "29a"), falls vorhanden
 
 const fileInput = document.getElementById('fileInput');
 const statusEl = document.getElementById('status');
@@ -243,20 +296,15 @@ fileInput.addEventListener('change', async () => {
     if (file.name.toLowerCase().endsWith('.json')) {
       const text = await file.text();
       loadSeatingJson(JSON.parse(text));
-      setStatus('Sitzordnung geladen: ' + students.length + ' Lernende.', 'ok');
+      afterLoad('Sitzordnung geladen: ' + students.length + ' Lernende.');
     } else {
       const buf = await file.arrayBuffer();
-      const list = await readAddressXlsx(buf);
-      if (list.length === 0) throw new Error('Keine Namen gefunden. Bitte prüfen, ob die Datei ein direkter Evento-Export ist.');
-      loadFreshStudents(list);
-      setStatus('Adressliste geladen: ' + students.length + ' Lernende.', 'ok');
+      const res = await readAddressXlsx(buf);
+      if (res.list.length === 0) throw new Error('Keine Namen gefunden. Bitte prüfen, ob die Datei ein direkter Evento-Export ist.');
+      loadFreshStudents(res.list);
+      className = res.className;
+      afterLoad('Adressliste geladen: ' + students.length + ' Lernende' + (className ? ' (Klasse ' + className + ')' : '') + '.');
     }
-    importedInfo.textContent = students.length + ' Lernende geladen';
-    wishPanel.style.display = 'block';
-    connectPanel.style.display = 'block';
-    groupPanel.style.display = 'block';
-    exportPanel.style.display = 'block';
-    renderAll();
   } catch (err) {
     setStatus('Fehler beim Import: ' + err.message, 'error');
     console.error(err);
@@ -264,11 +312,37 @@ fileInput.addEventListener('change', async () => {
   fileInput.value = '';
 });
 
+document.getElementById('pasteLoadBtn').addEventListener('click', () => {
+  const text = document.getElementById('pasteBox').value.trim();
+  if (!text) { setStatus('Bitte zuerst den kopierten Text einfügen.', 'error'); return; }
+  try {
+    const data = JSON.parse(text);
+    if (!data.students || !data.students.length) throw new Error('Kein gültiger Sitzordnungs-Text.');
+    loadSeatingJson(data);
+    document.getElementById('pasteBox').value = '';
+    afterLoad('Sitzordnung aus Text geladen: ' + students.length + ' Lernende.');
+  } catch (err) {
+    setStatus('Der Text konnte nicht gelesen werden. Wurde er vollständig kopiert? (' + err.message + ')', 'error');
+  }
+});
+
+function afterLoad(msg) {
+  setStatus(msg, 'ok');
+  importedInfo.textContent = students.length + ' Lernende geladen' + (className ? ', Klasse ' + className : '');
+  document.getElementById('saveName').value = className || 'Sitzordnung';
+  wishPanel.style.display = 'block';
+  connectPanel.style.display = 'block';
+  groupPanel.style.display = 'block';
+  exportPanel.style.display = 'block';
+  document.getElementById('imagePreview').innerHTML = '';
+  renderAll();
+}
+
 async function readAddressXlsx(buffer) {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(buffer);
   const sheet = wb.worksheets.find(ws => /datenimport/i.test(ws.name)) || wb.worksheets[0];
-  let colNa = null, colVo = null, colG = null;
+  let colNa = null, colVo = null, colG = null, colK = null;
   const headerRow = sheet.getRow(1);
   headerRow.eachCell((cell, colNumber) => {
     const v = (cell.value || '').toString().trim().toLowerCase();
@@ -276,9 +350,11 @@ async function readAddressXlsx(buffer) {
     if (v === 'na' || (colNa === null && v === 'nachname')) colNa = colNumber;
     if (v === 'vo' || (colVo === null && v === 'vorname')) colVo = colNumber;
     if (v.includes('geschlecht')) colG = colNumber;
+    if (v === 'l_klassen' || (colK === null && v === 'klasse')) colK = colNumber;
   });
   if (!colNa || !colVo) { colNa = 1; colVo = 2; }
   const list = [];
+  let foundClass = '';
   sheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) return;
     const nach = row.getCell(colNa).value;
@@ -289,10 +365,11 @@ async function readAddressXlsx(buffer) {
         vorname: String(vor).trim(),
         geschlecht: colG ? String(row.getCell(colG).value || '').trim() : ''
       });
+      if (!foundClass && colK) foundClass = String(row.getCell(colK).value || '').trim();
     }
   });
   list.sort((a, b) => (a.nachname + a.vorname).localeCompare(b.nachname + b.vorname, 'de'));
-  return list;
+  return { list, className: foundClass };
 }
 
 function loadFreshStudents(list) {
@@ -308,11 +385,25 @@ function loadFreshStudents(list) {
   layoutInitialPositions();
 }
 
+function currentState() {
+  const positions = {};
+  students.forEach(s => positions[s.id] = { x: s.x, y: s.y });
+  return {
+    version: 3,
+    className,
+    students, connections, wishGroups, groups,
+    groupSize: parseInt(groupSizeEl.value) || 4,
+    sliderWeight: parseInt(weightSliderEl.value) || 50,
+    positions
+  };
+}
+
 function loadSeatingJson(data) {
   students = data.students || [];
   connections = data.connections || [];
   wishGroups = data.wishGroups || [];
   groups = data.groups || [];
+  className = data.className || '';
   nextId = (Math.max(0, ...students.map(s => s.id)) || 0) + 1;
   seenSignatures = new Set();
   students.forEach(s => {
@@ -384,6 +475,7 @@ function renderWishStep() {
     layoutByGroups(wishGroups);
     renderCanvas();
   }
+  autosave();
 }
 
 function layoutByGroups(gs) {
@@ -547,6 +639,7 @@ function renderCanvas() {
     canvasWrap.appendChild(box);
   });
   drawLines();
+  autosave();
 }
 
 function drawLines() {
@@ -723,6 +816,7 @@ function renderGroups() {
     : '';
 
   drawGroupLines();
+  autosave();
 }
 
 // Zeigt die gut/weniger gut passend-Markierungen aus Schritt 3 auch über dem
@@ -763,53 +857,216 @@ function drawGroupLines() {
   groupCardsEl.insertBefore(svgEl, groupCardsEl.firstChild);
 }
 
-// ---------- Schritt 5: Sichern ----------
+// ---------- Schritt 5: Sichern und weitergeben ----------
+// Speichern im Browser (localStorage). Funktioniert ohne Downloads, also auch im Teams-Reiter.
+const SAVES_KEY = 'sitzplanGenerator.saves';
+const AUTO_KEY = 'sitzplanGenerator.autosave';
+
+function storageGet(key) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch (e) { return null; }
+}
+function storageSet(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
+}
+function storageAvailable() {
+  try { localStorage.setItem('__test', '1'); localStorage.removeItem('__test'); return true; } catch (e) { return false; }
+}
+function formatDate(iso) {
+  const d = new Date(iso);
+  const p = n => String(n).padStart(2, '0');
+  return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear() + ', ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+
+let autosaveTimer = null;
+function autosave() {
+  if (!students.length) return;
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => {
+    storageSet(AUTO_KEY, { savedAt: new Date().toISOString(), data: currentState() });
+    renderSavedList();
+  }, 400);
+}
+
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const msg = document.getElementById('saveMsg');
+  const name = document.getElementById('saveName').value.trim();
+  if (!name) { msg.className = 'hint msg-err'; msg.textContent = 'Bitte einen Namen eingeben.'; return; }
+  const saves = storageGet(SAVES_KEY) || {};
+  saves[name] = { savedAt: new Date().toISOString(), data: currentState() };
+  if (storageSet(SAVES_KEY, saves)) {
+    msg.className = 'hint msg-ok';
+    msg.textContent = 'Gespeichert als "' + name + '". Wieder aufrufen: Schritt 1, "Gespeicherte Sitzordnungen".';
+  } else {
+    msg.className = 'hint msg-err';
+    msg.textContent = 'Speichern im Browser ist in dieser Umgebung leider nicht möglich. Bitte "Sitzordnung als Text kopieren" verwenden.';
+  }
+  renderSavedList();
+});
+
+function renderSavedList() {
+  const box = document.getElementById('savedList');
+  box.innerHTML = '';
+  if (!storageAvailable()) {
+    box.innerHTML = '<span class="hint">Speichern im Browser ist in dieser Umgebung nicht verfügbar. Bitte in Schritt 5 "Sitzordnung als Text kopieren" verwenden.</span>';
+    return;
+  }
+  const entries = [];
+  const auto = storageGet(AUTO_KEY);
+  if (auto && auto.data) entries.push({ label: 'Zuletzt bearbeitet (automatisch gesichert)', entry: auto, isAuto: true });
+  const saves = storageGet(SAVES_KEY) || {};
+  Object.keys(saves)
+    .sort((a, b) => (saves[b].savedAt || '').localeCompare(saves[a].savedAt || ''))
+    .forEach(name => entries.push({ label: name, entry: saves[name], isAuto: false, name }));
+
+  if (!entries.length) {
+    box.innerHTML = '<span class="hint">Noch keine gespeicherten Sitzordnungen in diesem Browser.</span>';
+    return;
+  }
+  entries.forEach(e => {
+    const row = document.createElement('div');
+    row.className = 'savedItem';
+    const n = (e.entry.data.students || []).length;
+    const cls = e.entry.data.className ? ', Klasse ' + e.entry.data.className : '';
+    row.innerHTML = '<b></b><span class="meta"></span>';
+    row.querySelector('b').textContent = e.label;
+    row.querySelector('.meta').textContent = formatDate(e.entry.savedAt) + ', ' + n + ' Lernende' + cls;
+    const loadBtn = document.createElement('button');
+    loadBtn.textContent = 'Laden';
+    loadBtn.addEventListener('click', () => {
+      loadSeatingJson(e.entry.data);
+      afterLoad('"' + e.label + '" geladen: ' + students.length + ' Lernende.');
+      if (!e.isAuto) document.getElementById('saveName').value = e.name;
+    });
+    row.appendChild(loadBtn);
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'Löschen';
+    delBtn.className = 'secondary';
+    delBtn.addEventListener('click', () => {
+      if (!confirm('"' + e.label + '" wirklich löschen?')) return;
+      if (e.isAuto) { try { localStorage.removeItem(AUTO_KEY); } catch (err) {} }
+      else { const s = storageGet(SAVES_KEY) || {}; delete s[e.name]; storageSet(SAVES_KEY, s); }
+      renderSavedList();
+    });
+    row.appendChild(delBtn);
+    box.appendChild(row);
+  });
+}
+
+// Text in die Zwischenablage kopieren, mit Rückfalloption für eingeschränkte Umgebungen.
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; }
+  } catch (e) { /* weiter mit Rückfalloption */ }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) { return false; }
+}
+
+document.getElementById('copyJsonBtn').addEventListener('click', async () => {
+  const text = JSON.stringify(currentState());
+  const msg = document.getElementById('copyMsg');
+  const fallback = document.getElementById('jsonFallback');
+  const ok = await copyText(text);
+  if (ok) {
+    msg.className = 'hint msg-ok';
+    msg.textContent = 'Kopiert. Jetzt z.B. in einen Teams-Chat einfügen (Ctrl+V).';
+    fallback.style.display = 'none';
+  } else {
+    msg.className = 'hint msg-err';
+    msg.textContent = 'Automatisches Kopieren war nicht möglich. Bitte den Text unten markieren (Ctrl+A) und kopieren (Ctrl+C).';
+    fallback.value = text;
+    fallback.style.display = 'block';
+    fallback.focus(); fallback.select();
+  }
+});
+
 document.getElementById('exportBtn').addEventListener('click', () => {
-  const positions = {};
-  students.forEach(s => positions[s.id] = { x: s.x, y: s.y });
-  const data = {
-    version: 2,
-    students, connections, wishGroups, groups,
-    groupSize: parseInt(groupSizeEl.value) || 4,
-    sliderWeight: parseInt(weightSliderEl.value) || 50,
-    positions
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(currentState(), null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = 'Sitzordnung.json';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const box = document.getElementById('exportStatus');
+  box.innerHTML = '';
+  box.appendChild(document.createTextNode('Download gestartet (ausserhalb von Teams im Downloads-Ordner). In Teams werden Downloads teilweise blockiert, dann besser "Im Browser speichern" oder "Als Text kopieren" verwenden. '));
+  const link = document.createElement('a');
+  link.href = url; link.download = 'Sitzordnung.json'; link.target = '_blank'; link.rel = 'noopener';
+  link.textContent = 'Erneut versuchen';
+  box.appendChild(link);
 });
 
-document.getElementById('exportImageBtn').addEventListener('click', async () => {
-  if (!groups.length) { setStatus('Bitte zuerst einen Vorschlag berechnen.', 'error'); return; }
+// Bild: wird in der Seite angezeigt und in die Zwischenablage kopiert (kein Download nötig).
+let lastImageBlob = null;
+document.getElementById('imageBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('imageMsg');
+  const preview = document.getElementById('imagePreview');
+  if (!groups.length) { msg.className = 'hint msg-err'; msg.textContent = 'Bitte zuerst in Schritt 4 einen Vorschlag berechnen.'; return; }
   const lines = groupCardsEl.querySelector('svg.groupLines');
   const prevDisplay = lines ? lines.style.display : null;
-  if (lines) lines.style.display = 'none'; // Verbindungslinien nicht mit exportieren
+  if (lines) lines.style.display = 'none'; // Verbindungslinien nicht ins Bild
   const conflictTags = Array.from(groupCardsEl.querySelectorAll('.tag.conflict'));
-  conflictTags.forEach(t => t.classList.remove('conflict')); // Rotmarkierung nicht mit exportieren, Bild bleibt neutral
+  conflictTags.forEach(t => t.classList.remove('conflict')); // Bild bleibt neutral
+  let canvasImg;
   try {
-    const canvasImg = await html2canvas(groupCardsEl, { backgroundColor: '#ffffff', scale: 2 });
-    const url = canvasImg.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = url; a.download = 'Sitzordnung.png';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    canvasImg = await html2canvas(groupCardsEl, { backgroundColor: '#ffffff', scale: 2 });
   } catch (err) {
-    setStatus('Fehler beim Bildexport: ' + err.message, 'error');
+    msg.className = 'hint msg-err'; msg.textContent = 'Fehler beim Erzeugen des Bildes: ' + err.message;
+    return;
   } finally {
     if (lines) lines.style.display = prevDisplay;
     conflictTags.forEach(t => t.classList.add('conflict'));
   }
+  const dataUrl = canvasImg.toDataURL('image/png');
+  preview.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = dataUrl;
+  img.alt = 'Sitzordnung';
+  preview.appendChild(img);
+
+  lastImageBlob = await new Promise(res => canvasImg.toBlob(res, 'image/png'));
+  let copied = false;
+  try {
+    if (navigator.clipboard && window.ClipboardItem && lastImageBlob) {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': lastImageBlob })]);
+      copied = true;
+    }
+  } catch (e) { copied = false; }
+
+  if (copied) {
+    msg.className = 'hint msg-ok';
+    msg.textContent = 'Bild kopiert. Jetzt z.B. in einen Teams-Chat oder in OneNote einfügen (Ctrl+V).';
+  } else {
+    msg.className = 'hint';
+    msg.textContent = 'Das Bild wird unten angezeigt. Automatisches Kopieren war hier nicht möglich: Rechtsklick auf das Bild, "Bild kopieren", oder mit Windows+Shift+S einen Bildschirmausschnitt machen.';
+  }
+  const dl = document.createElement('a');
+  dl.href = dataUrl; dl.download = 'Sitzordnung.png'; dl.target = '_blank'; dl.rel = 'noopener';
+  dl.textContent = 'Als PNG-Datei herunterladen (funktioniert in Teams evtl. nicht)';
+  dl.style.display = 'inline-block'; dl.style.marginTop = '6px'; dl.style.fontSize = '12px';
+  preview.appendChild(document.createElement('br'));
+  preview.appendChild(dl);
 });
 
 function renderAll() {
   renderWishStep();
   renderCanvas();
-  groupCardsEl.innerHTML = '';
-  statsBox.innerHTML = '';
-  conflictBox.innerHTML = '';
+  if (groups.length) {
+    renderGroups();
+  } else {
+    groupCardsEl.innerHTML = '';
+    statsBox.innerHTML = '';
+    conflictBox.innerHTML = '';
+  }
 }
+
+renderSavedList();
 </script>
 
 </body>
