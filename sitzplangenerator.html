@@ -101,7 +101,9 @@
   .studentBox.linkedRed { border-color: var(--red); }
   .studentBox.faded { opacity: 0.35; }
 
-  .bucketArea { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; position: relative; }
+  .bucketArea { display: flex; flex-wrap: nowrap; gap: 14px; margin-top: 14px; position: relative; overflow-x: auto; padding-bottom: 8px; align-items: flex-start; }
+  .bucketArea > .bucket { flex: 0 0 auto; }
+  .bucket h3.off { color: var(--red); }
   .bucket {
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -395,6 +397,17 @@ function numGroupsFor(n) {
 }
 
 // Sollgrösse pro Gruppe bei gleich grossen Gruppen, z.B. "7–8" (23 Lernende, 3 Gruppen)
+// true, wenn die Gruppe mehr oder weniger Personen hat als bei gleich grossen Gruppen vorgesehen
+function isOffTarget(count) {
+  const n = students.length, k = numGroupsFor(n);
+  const base = Math.floor(n / k), max = (n % k === 0) ? base : base + 1;
+  return count < base || count > max;
+}
+
+function groupHeader(gi, count) {
+  return '<h3' + (isOffTarget(count) ? ' class="off"' : '') + '>Gruppe ' + (gi + 1) + ' (' + count + ' von ' + targetSizeLabel() + ')</h3>';
+}
+
 function targetSizeLabel() {
   const n = students.length, k = numGroupsFor(n);
   const base = Math.floor(n / k);
@@ -417,7 +430,6 @@ function renderWishStep() {
   groupCountEl.value = numGroupsFor(students.length);
   groupCountEl.max = Math.max(1, students.length);
   groupCountDisplay.textContent = numGroupsFor(students.length);
-  const target = targetSizeLabel();
   const assigned = new Set();
   wishGroups.forEach(g => g.forEach(id => assigned.add(id)));
   const byId = Object.fromEntries(students.map(s => [s.id, s]));
@@ -426,7 +438,7 @@ function renderWishStep() {
 
   const poolDiv = document.createElement('div');
   poolDiv.className = 'bucket pool';
-  poolDiv.innerHTML = '<h3>Noch nicht zugeteilt</h3>';
+  poolDiv.innerHTML = '<h3>Noch nicht zugeteilt (' + students.filter(s => !assigned.has(s.id)).length + ')</h3>';
   students.filter(s => !assigned.has(s.id)).forEach(s => poolDiv.appendChild(makeWishTag(s, -1)));
   addWishDropTarget(poolDiv, -1);
   wishArea.appendChild(poolDiv);
@@ -434,7 +446,7 @@ function renderWishStep() {
   wishGroups.forEach((g, gi) => {
     const box = document.createElement('div');
     box.className = 'bucket';
-    box.innerHTML = '<h3>Gruppe ' + (gi + 1) + ' (' + g.length + ' von ' + target + ')</h3>';
+    box.innerHTML = groupHeader(gi, g.length);
     g.forEach(id => { if (byId[id]) box.appendChild(makeWishTag(byId[id], gi)); });
     addWishDropTarget(box, gi);
     wishArea.appendChild(box);
@@ -763,7 +775,7 @@ function renderGroups() {
     const card = document.createElement('div');
     card.className = 'bucket';
     card.dataset.gi = gi;
-    card.innerHTML = '<h3>Gruppe ' + (gi + 1) + ' (' + g.length + ' von ' + targetSizeLabel() + ')</h3>';
+    card.innerHTML = groupHeader(gi, g.length);
     g.forEach(id => {
       const s = byId[id];
       const tag = document.createElement('div');
@@ -877,11 +889,20 @@ async function renderGroupsImage() {
   if (lines) lines.style.display = 'none';
   const conflictTags = Array.from(groupCardsEl.querySelectorAll('.tag.conflict'));
   conflictTags.forEach(t => t.classList.remove('conflict'));
+  const offHeads = Array.from(groupCardsEl.querySelectorAll('h3.off'));
+  offHeads.forEach(h => h.classList.remove('off'));
+  // Alle Gruppen nebeneinander ins Bild, auch die, für die man sonst scrollen müsste
+  const prevOverflow = groupCardsEl.style.overflowX, prevWidth = groupCardsEl.style.width;
+  groupCardsEl.style.overflowX = 'visible';
+  groupCardsEl.style.width = 'max-content';
   try {
-    return await html2canvas(groupCardsEl, { backgroundColor: '#ffffff', scale: 2 });
+    return await html2canvas(groupCardsEl, { backgroundColor: '#ffffff', scale: 2, windowWidth: Math.max(document.documentElement.clientWidth, groupCardsEl.scrollWidth + 60) });
   } finally {
+    groupCardsEl.style.overflowX = prevOverflow;
+    groupCardsEl.style.width = prevWidth;
     if (lines) lines.style.display = prevDisplay;
     conflictTags.forEach(t => t.classList.add('conflict'));
+    offHeads.forEach(h => h.classList.add('off'));
   }
 }
 
