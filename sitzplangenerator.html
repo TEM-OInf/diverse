@@ -166,8 +166,8 @@
   <h2>2. Lernendenperspektive</h2>
   <p class="desc">Wunschgruppen: Namen in die Gruppen ziehen.</p>
   <div class="row">
-    <label for="groupSize" style="font-size:13px;color:var(--muted)">Gruppengrösse</label>
-    <input type="number" id="groupSize" value="4" min="2" step="1">
+    <label for="groupCount" style="font-size:13px;color:var(--muted)">Anzahl Gruppen</label>
+    <input type="number" id="groupCount" value="4" min="1" step="1">
   </div>
   <div class="bucketArea" id="wishArea"></div>
 </div>
@@ -190,7 +190,7 @@
 
 <div class="panel" id="groupPanel" style="display:none">
   <h2>4. Vorschlag berechnen</h2>
-  <p class="desc">Gruppengrösse <span id="groupSizeDisplay">4</span>. Namen ziehen, um von Hand zu tauschen.</p>
+  <p class="desc"><span id="groupCountDisplay">4</span> Gruppen (Einstellung in Schritt 2). Namen ziehen, um von Hand zu tauschen.</p>
   <div class="sliderRow">
     <input type="range" id="weightSlider" min="0" max="100" value="50">
   </div>
@@ -253,8 +253,8 @@ const wishArea = document.getElementById('wishArea');
 const groupCardsEl = document.getElementById('groupCards');
 const conflictBox = document.getElementById('conflictBox');
 const statsBox = document.getElementById('statsBox');
-const groupSizeEl = document.getElementById('groupSize');
-const groupSizeDisplay = document.getElementById('groupSizeDisplay');
+const groupCountEl = document.getElementById('groupCount');
+const groupCountDisplay = document.getElementById('groupCountDisplay');
 const weightSliderEl = document.getElementById('weightSlider');
 
 function setStatus(msg, kind) {
@@ -344,6 +344,7 @@ function loadFreshStudents(list) {
     students.push({ id: nextId++, vorname: p.vorname, nachname: p.nachname, geschlecht: p.geschlecht, x: 0, y: 0 });
   });
   layoutInitialPositions();
+  groupCountEl.value = Math.max(1, Math.round(students.length / 4)); // Startwert: Gruppen à ca. 4
 }
 
 function currentState() {
@@ -353,7 +354,7 @@ function currentState() {
     version: 3,
     className,
     students, connections, wishGroups, groups,
-    groupSize: parseInt(groupSizeEl.value) || 4,
+    groupCount: numGroupsFor(students.length),
     sliderWeight: parseInt(weightSliderEl.value) || 50,
     positions
   };
@@ -374,7 +375,8 @@ function loadSeatingJson(data) {
     }
   });
   if (!data.positions) layoutInitialPositions();
-  if (data.groupSize) groupSizeEl.value = data.groupSize;
+  if (data.groupCount) groupCountEl.value = data.groupCount;
+  else if (data.groupSize) groupCountEl.value = Math.max(1, Math.ceil(students.length / data.groupSize)); // ältere Dateien
   if (data.sliderWeight !== undefined) weightSliderEl.value = data.sliderWeight;
 }
 
@@ -388,8 +390,15 @@ function layoutInitialPositions() {
 }
 
 function numGroupsFor(n) {
-  const gs = Math.max(2, parseInt(groupSizeEl.value) || 4);
-  return Math.max(1, Math.ceil(n / gs));
+  const k = parseInt(groupCountEl.value) || 1;
+  return Math.max(1, Math.min(Math.max(n, 1), k));
+}
+
+// Sollgrösse pro Gruppe bei gleich grossen Gruppen, z.B. "7–8" (23 Lernende, 3 Gruppen)
+function targetSizeLabel() {
+  const n = students.length, k = numGroupsFor(n);
+  const base = Math.floor(n / k);
+  return (n % k === 0) ? String(base) : base + '–' + (base + 1);
 }
 
 // ---------- Schritt 2: Lernendenperspektive ----------
@@ -399,13 +408,16 @@ function ensureWishGroupsSize() {
   if (wishGroups.length > n) {
     const overflow = wishGroups.slice(n);
     wishGroups = wishGroups.slice(0, n);
-    overflow.forEach(g => { /* Mitglieder fallen zurück in den Pool */ });
+    // Mitglieder weggefallener Gruppen fallen automatisch zurück in "Noch nicht zugeteilt"
   }
 }
 
 function renderWishStep() {
   ensureWishGroupsSize();
-  groupSizeDisplay.textContent = parseInt(groupSizeEl.value) || 4;
+  groupCountEl.value = numGroupsFor(students.length);
+  groupCountEl.max = Math.max(1, students.length);
+  groupCountDisplay.textContent = numGroupsFor(students.length);
+  const target = targetSizeLabel();
   const assigned = new Set();
   wishGroups.forEach(g => g.forEach(id => assigned.add(id)));
   const byId = Object.fromEntries(students.map(s => [s.id, s]));
@@ -422,7 +434,7 @@ function renderWishStep() {
   wishGroups.forEach((g, gi) => {
     const box = document.createElement('div');
     box.className = 'bucket';
-    box.innerHTML = '<h3>Gruppe ' + (gi + 1) + ' (' + g.length + ')</h3>';
+    box.innerHTML = '<h3>Gruppe ' + (gi + 1) + ' (' + g.length + ' von ' + target + ')</h3>';
     g.forEach(id => { if (byId[id]) box.appendChild(makeWishTag(byId[id], gi)); });
     addWishDropTarget(box, gi);
     wishArea.appendChild(box);
@@ -500,7 +512,16 @@ function addWishDropTarget(el, gi) {
   });
 }
 
-groupSizeEl.addEventListener('change', () => { renderWishStep(); });
+groupCountEl.addEventListener('change', () => {
+  // Passt der Vorschlag in Schritt 4 nicht mehr zur Gruppenzahl, wird er verworfen
+  if (groups.length && groups.length !== numGroupsFor(students.length)) {
+    groups = [];
+    groupCardsEl.innerHTML = '';
+    statsBox.innerHTML = '';
+    conflictBox.innerHTML = '';
+  }
+  renderWishStep();
+});
 
 // ---------- Schritt 3: Lehrpersonenperspektive (Verbindungs-Canvas) ----------
 function findConnection(a, b) {
@@ -742,7 +763,7 @@ function renderGroups() {
     const card = document.createElement('div');
     card.className = 'bucket';
     card.dataset.gi = gi;
-    card.innerHTML = '<h3>Gruppe ' + (gi + 1) + ' (' + g.length + ')</h3>';
+    card.innerHTML = '<h3>Gruppe ' + (gi + 1) + ' (' + g.length + ' von ' + targetSizeLabel() + ')</h3>';
     g.forEach(id => {
       const s = byId[id];
       const tag = document.createElement('div');
