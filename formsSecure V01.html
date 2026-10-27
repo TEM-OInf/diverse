@@ -60,7 +60,8 @@ button:disabled{background:#777;cursor:not-allowed}footer p{margin:0;font-size:1
 // ===== Hier pro Prüfung anpassen =====
 var TITLE = 'Leistungskontrolle';
 var FORMS_URL = 'https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=yIV0ZMJaJkaENBIf-eXWPNeyP6B8VlJOpeAKamLNSlVUMFNZQ1lMUDQyWEIxMk1LMFY2WkYwSzVFSCQlQCNjPTEu';
-var PAGE_URL = 'https://tem-oinf.github.io/diverse/formsSecure.html';
+// Dieselbe Datei in Take a Test öffnen, auch nach dem Umbenennen.
+var PAGE_URL = window.location.href;
 // =====================================
 // No credentials, tokens, OAuth redirect tricks or messages from Forms are collected.
 // This opens Forms itself at top level, NOT an MSAL login for this wrapper.
