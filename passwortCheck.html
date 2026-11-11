@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wie lange hält dieses Passwort?</title>
+<style>
+  :root{
+    --plum:#492C4B; --plum-2:#5d3a60; --pink:#E72962;
+    --ink:#f6f1f6; --mut:#c7b4c9; --ok:#4ddba0; --warn:#ffcc55;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--plum); color:var(--ink);
+    font-family:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:14px;
+  }
+  .wrap{width:100%; max-width:1180px; display:grid; grid-template-columns:1.25fr .95fr; gap:22px}
+  h1{font-size:23px; margin:0 0 2px; font-weight:700; letter-spacing:.2px}
+  .sub{color:var(--mut); font-size:13px; margin:0 0 14px}
+  label{display:block; font-size:12px; color:var(--mut); margin-bottom:5px}
+  input[type=text]{
+    width:100%; padding:13px 15px; font-size:20px; border-radius:11px;
+    border:2px solid #6c4a6f; background:#3c2440; color:var(--ink);
+    font-family:ui-monospace,"SF Mono",Consolas,monospace;
+  }
+  input[type=text]:focus{outline:none; border-color:var(--pink)}
+  .bar{height:9px; border-radius:6px; background:#3c2440; margin:13px 0 9px; overflow:hidden}
+  .bar i{display:block; height:100%; width:0; background:var(--pink); transition:width .25s}
+  .time{font-size:30px; font-weight:700; line-height:1.18; margin:0; word-break:break-word}
+  .time.small{font-size:23px; letter-spacing:.3px}
+  .time.tiny{font-size:18px; letter-spacing:.2px}
+  .verdict{font-size:13px; color:var(--mut); margin:6px 0 0; min-height:32px}
+  .more{margin-top:10px}
+  .moreBtn{
+    font-family:inherit; font-size:13px; cursor:pointer; color:var(--ink);
+    background:transparent; border:1px solid #7a5880; border-radius:9px; padding:7px 12px;
+  }
+  .moreBtn:hover{border-color:var(--pink)}
+  .panelInfo{
+    margin-top:9px; font-size:11.5px; color:var(--mut); line-height:1.5;
+    background:rgba(255,255,255,.055); border-radius:10px; padding:10px 12px;
+  }
+  .panel{background:rgba(255,255,255,.055); border-radius:14px; padding:15px 16px}
+  .panel h2{font-size:13px; text-transform:uppercase; letter-spacing:1.1px; color:var(--mut); margin:0 0 9px; font-weight:600}
+  .ex{display:flex; flex-wrap:wrap; gap:7px}
+  .ex button, .gen{
+    font-family:inherit; font-size:13px; cursor:pointer; color:var(--ink);
+    background:#5d3a60; border:1px solid #7a5880; border-radius:9px; padding:7px 11px;
+  }
+  .ex button:hover,.gen:hover{border-color:var(--pink)}
+  .gen{background:var(--pink); border-color:var(--pink); font-weight:600; padding:9px 13px}
+  .out{font-family:ui-monospace,Consolas,monospace; font-size:17px; margin:9px 0 0; word-break:break-all}
+  .note{font-size:11.5px; color:var(--mut); line-height:1.45; margin:11px 0 0}
+  .flag{color:var(--warn)}
+  @media (max-width:900px){ .wrap{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div>
+    <h1>Wie lange hält dieses Passwort?</h1>
+    <p class="sub">Tippen Sie nie Ihr echtes Passwort irgendwo ein, auch hier nicht. Probieren Sie Varianten davon.</p>
+
+    <input id="pw" type="text" autocomplete="off" spellcheck="false" placeholder="hier tippen">
+    <div class="bar"><i id="bar"></i></div>
+    <p class="time" id="time">&nbsp;</p>
+    <p class="verdict" id="verdict"></p>
+
+    <div class="more">
+      <button class="moreBtn" id="moreBtn">Woher kommt diese Zahl?</button>
+      <div class="panelInfo" id="moreBox" hidden>
+        Angenommen, jemand hat die Passwortliste eines Dienstes gestohlen und probiert sie
+        auf eigenen Rechnern durch: 100 Milliarden Versuche pro Sekunde. Genau so laufen echte
+        Angriffe. Die Rechnung ist eine Schätzung und zieht ab, was Angreifer zuerst probieren,
+        etwa Namen, Jahreszahlen und das Muster Wort-Zahl-Zeichen. Alles passiert in Ihrem
+        Browser, es wird nichts gesendet.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Zum Vergleich</h2>
+    <div class="ex" id="ex"></div>
+    <button class="gen" id="genBtn">Neuer Vorschlag</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var GUESSES_PER_SEC = 1e11;
+
+  var COMMON = ["passwort","password","123456","12345678","qwertz","qwerty","hallo","schatz",
+    "sommer","winter","fussball","ichliebedich","admin","iloveyou","princess","dragon",
+    "monkey","letmein","willkommen","master","sonne","mama","papa","schule","gymnasium",
+    "lena","laura","sarah","anna","julia","mia","noah","luca","leon","david","nina","sara",
+    "fcbasel","ycb","bern","schweiz","minecraft","fortnite","roblox","spotify","instagram"];
+
+  var WORDS = ["Anker","Birke","Dachs","Eimer","Fjord","Gipfel","Halm","Insel","Jolle","Kiesel",
+    "Lawine","Moos","Nebel","Otter","Pilz","Quelle","Riff","Schilf","Tanne","Ufer","Vogel",
+    "Wolke","Zaun","Brunnen","Fels","Kahn","Luchs","Nadel","Sturm","Weide","Funke","Gletscher",
+    "Hummel","Kiefer","Nuss","Pfad","Salz","Teich","Wurzel","Zweig"];
+
+  function charsetSize(s){
+    var n = 0;
+    if(/[a-z]/.test(s)) n += 26;
+    if(/[A-ZÄÖÜ]/.test(s)) n += 29;
+    if(/[0-9]/.test(s)) n += 10;
+    if(/[^A-Za-z0-9ÄÖÜäöü]/.test(s)) n += 32;
+    if(/[äöüß]/.test(s)) n += 4;
+    return n || 1;
+  }
+
+  // Grobe Abschläge für Muster, die Angreifer zuerst durchprobieren.
+  function penaltyBits(s){
+    var low = s.toLowerCase(), p = 0, flags = [];
+
+    for(var i=0;i<COMMON.length;i++){
+      if(low.indexOf(COMMON[i]) !== -1 && COMMON[i].length >= 4){
+        p += COMMON[i].length * 3.2;
+        flags.push("ein häufiges Wort");
+        break;
+      }
+    }
+    if(/(19|20)\d\d/.test(s)){ p += 9; flags.push("eine Jahreszahl"); }
+    if(/^[A-ZÄÖÜ][a-zäöü]+[0-9]*[!?.]?$/.test(s)){ p += 7; flags.push("das Muster Wort-Zahl-Zeichen"); }
+    if(/(.)\1{2,}/.test(s)){ p += 5; flags.push("Wiederholungen"); }
+    if(/^\d+$/.test(s)){ p += 6; flags.push("nur Ziffern"); }
+
+    // Reihen wie abcdef, 12345, qwertz zählen fast nichts.
+    var seq = 0, kb = "qwertzuiopasdfghjklyxcvbnm";
+    for(var j=2;j<s.length;j++){
+      var a = s.charCodeAt(j-2), b = s.charCodeAt(j-1), c = s.charCodeAt(j);
+      if((b-a === 1 && c-b === 1) || (a-b === 1 && b-c === 1)) seq++;
+      else if(kb.indexOf(low.substr(j-2,3)) !== -1) seq++;
+    }
+    if(seq){ p += seq * 2.6; flags.push("eine Reihe wie abc oder 123"); }
+
+    // Wenige verschiedene Zeichen, etwa aaaaaa oder ababab.
+    var distinct = {}, d = 0;
+    for(var k=0;k<s.length;k++){ if(!distinct[s[k]]){ distinct[s[k]] = 1; d++; } }
+    if(d / s.length < 0.5 && s.length - d > 2){
+      p += (s.length - d) * 1.6; flags.push("wenige verschiedene Zeichen");
+    }
+
+    return {bits:p, flags:flags};
+  }
+
+  function groupDigits(str){
+    var out = "", c = 0;
+    for(var i = str.length - 1; i >= 0; i--){
+      out = str.charAt(i) + out;
+      if(++c % 3 === 0 && i > 0) out = " " + out;
+    }
+    return out;
+  }
+
+  // Grosse Zahlen voll ausschreiben, die Nullen sind der Effekt.
+  function bigNumber(v){
+    var e = Math.floor(Math.log(v)/Math.LN10);
+    var m = v / Math.pow(10, e);
+    var d = m.toFixed(2).replace(".", "").replace(/0+$/, "");
+    if(!d) d = "1";
+    var zeros = Math.max(e - (d.length - 1), 0);
+    return groupDigits(d + new Array(zeros + 1).join("0"));
+  }
+
+  function describe(sec){
+    if(sec < 1) return "sofort";
+    var units = [["Sekunden",1],["Minuten",60],["Stunden",3600],["Tagen",86400],
+                 ["Monaten",2629800],["Jahren",31557600]];
+    var out = "Sekunden", val = sec;
+    for(var i=0;i<units.length;i++){
+      if(sec/units[i][1] >= 1){ out = units[i][0]; val = sec/units[i][1]; }
+    }
+    if(out === "Jahren" && val > 1e6) return bigNumber(val) + " Jahre";
+    if(val >= 100) val = Math.round(val);
+    else val = Math.round(val*10)/10;
+    return val.toLocaleString("de-CH") + " " + out;
+  }
+
+  function evaluate(s){
+    if(!s) return null;
+    // Besteht das Passwort nur aus einem wiederholten Block, zählt der Block.
+    var rep = s.match(/^(.+?)\1+$/);
+    var unit = rep ? rep[1].length : s.length;
+    var reps = rep ? s.length / rep[1].length : 1;
+    var bits = unit * (Math.log(charsetSize(s))/Math.LN2) + Math.log(reps)/Math.LN2;
+    var pen = penaltyBits(s);
+    bits = Math.max(bits - pen.bits, 1);
+    var seconds = Math.pow(2, bits - 1) / GUESSES_PER_SEC;
+    return {bits:bits, seconds:seconds, flags:pen.flags};
+  }
+
+  var pw = document.getElementById("pw"),
+      bar = document.getElementById("bar"),
+      time = document.getElementById("time"),
+      verdict = document.getElementById("verdict");
+
+  function render(){
+    var r = evaluate(pw.value);
+    if(!r){
+      bar.style.width = "0"; time.innerHTML = "&nbsp;"; time.className = "time";
+      verdict.textContent = ""; return;
+    }
+    var pct = Math.min(r.bits / 90 * 100, 100);
+    bar.style.width = pct + "%";
+    bar.style.background = r.seconds < 86400 ? "#ff5d7a" : (r.seconds < 3.15e9 ? "#ffcc55" : "#4ddba0");
+    var txt = describe(r.seconds);
+    time.textContent = txt;
+    time.className = "time" + (txt.length > 30 ? " tiny" : (txt.length > 14 ? " small" : ""));
+    verdict.textContent = r.flags.length ? "Abzug für " + r.flags.join(", ") + "." : "";
+  }
+
+  pw.addEventListener("input", render);
+
+  var EXAMPLES = ["sommer2026","Lena2009!","Fussball!","Xk7#pQ","hallo123","M!necraft2024"];
+  var exBox = document.getElementById("ex");
+  EXAMPLES.forEach(function(e){
+    var b = document.createElement("button");
+    b.textContent = e;
+    b.addEventListener("click", function(){ pw.value = e; render(); pw.focus(); });
+    exBox.appendChild(b);
+  });
+
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+  function generate(){
+    var w = [];
+    while(w.length < 4){
+      var x = pick(WORDS);
+      if(w.indexOf(x) === -1) w.push(x);
+    }
+    return w.join("-") + "-" + Math.floor(Math.random()*90 + 10);
+  }
+  document.getElementById("genBtn").addEventListener("click", function(){
+    pw.value = generate(); render(); pw.focus();
+  });
+
+  var moreBox = document.getElementById("moreBox"),
+      moreBtn = document.getElementById("moreBtn");
+  moreBtn.addEventListener("click", function(){
+    var open = !moreBox.hasAttribute("hidden");
+    if(open){ moreBox.setAttribute("hidden",""); moreBtn.textContent = "Woher kommt diese Zahl?"; }
+    else { moreBox.removeAttribute("hidden"); moreBtn.textContent = "Weniger anzeigen"; }
+  });
+
+  pw.focus();
+})();
+</script>
+</body>
+</html>
